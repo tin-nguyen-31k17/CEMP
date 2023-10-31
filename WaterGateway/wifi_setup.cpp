@@ -10,8 +10,8 @@ Wifi_esp32::Wifi_esp32(String ssid = "", String password = "") {
 
 Wifi_esp32::Wifi_esp32() {
 // Constructor
-  this->ssid = "";
-  this->password = "";
+  this->ssid = "BKIntelNUC";
+  this->password = "12345678";
   Preferences preferences;
   this->preferences = preferences;
 }
