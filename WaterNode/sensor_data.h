@@ -1,5 +1,3 @@
-
-
 #ifndef INC_SENSOR_DATA_H_
 #define INC_SENSOR_DATA_H_
 

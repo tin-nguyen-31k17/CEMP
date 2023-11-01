@@ -1,3 +1,11 @@
+/*
+  Project: CEMP Mobility Water Monitoring Station
+  File: WaterNode.ino
+  Author: Nguyen Trong Tin
+  Email:tin.nguyen.31k17@hcmut.edu.vn
+  Description: This code is part of the CEMP Mobility Water Monitoring Station project. It runs on the WaterNode device and communicates sensor data to the WaterGateway using ESPNow.
+*/
+
 #include <M5Atom.h>
 #include <WiFi.h>
 #include <esp_now.h>
@@ -9,6 +17,7 @@
 uint8_t Gateway_Mac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
 volatile boolean messageSent;
 uint8_t receivedData[7];
+uint8_t dataToSend[SENSOR_COUNT * 2]; // Array to send sensor readings
 float sensorReadings[SENSOR_COUNT] = {0};
 
 // Function to read data from a sensor and store it in an array
@@ -20,6 +29,11 @@ void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* senso
     Serial2.readBytes(receivedData, sizeof(receivedData));
     sensorReading = (int)receivedData[3] * 256 + (int)receivedData[4];
   }
+}
+
+// For test without real sensor
+void generateRandomSensorData(float& sensorReading) {
+  sensorReading = random(0, 100);
 }
 
 void setup() {
@@ -49,27 +63,46 @@ void loop() {
     switch (i) {
       case 0:
         Serial.println("Reading water EC sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water EC: ");
         break;
       case 1:
         Serial.println("Reading water PH sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water PH: ");
         break;
       case 2:
         Serial.println("Reading water ORP sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water ORP: ");
         break;
       case 3:
         Serial.println("Reading water temperature sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water Temp: ");
         break;
     }
     Serial.println(sensorReadings[i]);
   }
+
+  // Copy sensor readings to dataToSend
+  for (int i = 0; i < SENSOR_COUNT; i++) {
+    int index = i * 2;
+    dataToSend[index] = (uint8_t)(sensorReadings[i] / 256); // High byte
+    dataToSend[index + 1] = (uint8_t)((int)sensorReadings[i] % 256); // Low byte
+  }
+
+  Serial.print("Data to be send: ");
+  for (int i = 0; i < 7; i++) {
+    Serial.print("0x");
+    Serial.print(dataToSend[i], HEX);
+    Serial.print(", ");
+  }
+  Serial.println();
 
   esp_now_register_send_cb([](const uint8_t* mac, esp_now_send_status_t sendStatus){
     // callback for message sent out
@@ -81,8 +114,8 @@ void loop() {
 
   // Send message -----------------------------------
   const uint8_t *peer_addr = gateway.peer_addr;
-  esp_err_t result = esp_now_send(peer_addr, (uint8_t *) &receivedData, sizeof(receivedData));
-  
+  esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
+
   Serial.print("Sending result: "); Serial.println(result);
 
   Serial.println();
