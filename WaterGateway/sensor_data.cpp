@@ -2,7 +2,7 @@
 #include "sensor_data.h"
 
 String SENSOR_DATA::floatToString(float value) {
-  char buffer[20];  // Đủ lớn để chứa chuỗi
+  char buffer[20];
   sprintf(buffer, "%.2f", value);
   return String(buffer);
 }
