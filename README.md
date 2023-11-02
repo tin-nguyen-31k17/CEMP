@@ -2,26 +2,26 @@
 
 ## Overview
 
-This project is based on the code available at [GitHub - BKInnovation_codeC](https://github.com/HyHyZhaLee/BKInnovation_codeC). It extends the functionality to include two communication channels: WiFi for connecting to the internet and MQTT server and ESPNow for one-way communication between the WaterNode and WaterGateway. Please note that the WiFi router's channel should be set to either 0, 1, 3, or 5 to avoid interference with ESPNow's operation.
+This project utilizes the M5 Atom as a node and the M5 Tough as a gateway. It's an extension of the code available on [GitHub - BKInnovation_codeC](https://github.com/HyHyZhaLee/BKInnovation_codeC). The project introduces two communication channels: WiFi for internet connectivity and MQTT server communication, as well as ESPNow for one-way communication between the WaterNode and WaterGateway. Please note that it's crucial to configure the WiFi router's channel to 0, 1, 3, or 5 to prevent interference with ESPNow's operation.
 
 ## Features
 
-1. **ESPNow Communication:** The project implements ESPNow to enable one-way communication between the WaterNode and WaterGateway. The WaterNode sends sensor data to the WaterGateway.
-   
+1. **ESPNow Communication:** This project implements ESPNow, facilitating one-way communication between the WaterNode and WaterGateway. The WaterNode transmits sensor data to the WaterGateway.
+
 2. **WiFi Connectivity:** The WaterGateway uses WiFi to connect to the internet and an MQTT server for data publishing. The code includes the necessary WiFi setup.
 
 ## Prerequisites
 
 - PlatformIO or Arduino IDE for programming the ESP32 devices.
-- An ESP32-based MCU, in this project I used the M5 Atom Lite for both the node and the gateway.
+- In this project I used the M5 Atom Lite for the node and the M5 Tough as a gateway but any ESP32-based MCU device theoretically would work.
 
 ## Setup and Configuration
 
-1. Clone or download the project code from here [GitHub - CEMP](https://github.com/tin-nguyen-31k17/CEMP).
+1. Clone or download the project code from [GitHub - CEMP](https://github.com/tin-nguyen-31k17/CEMP).
 
 2. Configure the code for both the WaterNode and WaterGateway by adjusting the WiFi credentials and other project-specific settings.
 
-3. Ensure that your router's WiFi channel is set to either 0, 1 for some specific router is 3 or 5 (tested) to prevent interference with ESPNow's operation.
+3. Ensure that your router's WiFi channel is set to either 0, 1 for some specific routers, 3, or 5 (tested) to prevent interference with ESPNow's operation.
 
 4. Upload the code to your WaterNode and WaterGateway devices using PlatformIO or the Arduino IDE.
 
