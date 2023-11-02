@@ -1,3 +1,8 @@
-"debug_custom" 
-"debug" 
-"esp32.svd" 
+# Ignore files named "debug_custom" anywhere in the project
+**/debug_custom
+
+# Ignore files named "debug" anywhere in the project
+**/debug
+
+# Ignore files named "esp32.svd" anywhere in the project
+**/esp32.svd
