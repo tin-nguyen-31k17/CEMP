@@ -14,8 +14,8 @@
 #include "sensor_data.h"
 #include "MQTT_helper.h"
 
-#define SOFTAP_SSID "SSID"
-#define SOFTAP_PASS "Password"
+#define SOFTAP_SSID "HPCCLAB"
+#define SOFTAP_PASS "hpccw1f1"
 #define SENSOR_COUNT 4
 
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
@@ -116,7 +116,8 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   for (int i = 0; i < SENSOR_COUNT; i++) {
     int highByte = receivedData[index++];
     int lowByte = receivedData[index++];
-    sensorReadings[i] = (highByte * 256) + lowByte;
+    // sensorReadings[i] = (highByte * 256) + lowByte;
+    sensorReadings[i]=receivedData[i];
   }
 
   // Process and publish the received data to MQTT
@@ -126,6 +127,7 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
 }
 
 void loop() {
+  myMQTT.checkConnect();
   delay(5000);
   myMQTT.checkConnect();
   M5.update();

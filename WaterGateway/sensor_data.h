@@ -16,7 +16,6 @@ class SENSOR_RS485{
     uint8_t* data_water_ph;
     uint8_t* data_water_orp;
     uint8_t* data_water_temp;
-    uint8_t* data_water_air;
 
   public:
     SENSOR_RS485();
@@ -25,7 +24,6 @@ class SENSOR_RS485{
     uint8_t* getDataWATER_PH();
     uint8_t* getDataWATER_ORP();
     uint8_t* getDataWATER_TEMP();
-    uint8_t* getDataWATER_AIR();
 };
 
 #endif

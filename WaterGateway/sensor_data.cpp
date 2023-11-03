@@ -55,7 +55,6 @@ SENSOR_RS485::SENSOR_RS485(){
   data_water_ph = new uint8_t[8]{0x04, 0x03, 0x00, 0x08, 0x00, 0x02, 0x45, 0x9C};
   data_water_orp = new uint8_t[8]{0x05, 0x03, 0x00, 0x01, 0x00, 0x02, 0x94, 0x4F};
   data_water_temp = new uint8_t[8]{0x05, 0x03, 0x00, 0x03, 0x00, 0x02, 0x35, 0x8F};
-  data_water_air = new uint8_t[8]{0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x0B};
 };
 
 SENSOR_RS485::~SENSOR_RS485() {
@@ -63,7 +62,6 @@ SENSOR_RS485::~SENSOR_RS485() {
   delete[] data_water_ph;
   delete[] data_water_orp;
   delete[] data_water_temp;
-  delete[] data_water_air;
 };
 
 uint8_t* SENSOR_RS485::getDataWATER_EC(){
@@ -80,8 +78,4 @@ uint8_t* SENSOR_RS485::getDataWATER_ORP(){
 
 uint8_t* SENSOR_RS485::getDataWATER_TEMP(){
   return data_water_temp;
-};
-
-uint8_t* SENSOR_RS485::getDataWATER_AIR(){
-  return data_water_air;
 };
