@@ -219,8 +219,8 @@ void loop() {
   // // Convert RH in %
   // humidity = 100 * (float)((uint16_t)data[6] << 8 | data[7]) / 65535;
 
-  co2 =  receivedData[0];
-  temperature = receivedData[1];
+  co2 = receivedData[0];
+  temperature = receivedData[3];
   humidity = receivedData[2];
 
   // Serial.printf("co2 %02f, temperature %02f, temperature offset %02f, humidity %02f\n", co2, temperature,
@@ -248,9 +248,9 @@ void loop() {
 
     M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
     if (co2 < 1000) {
-      M5.Displays(0).drawString("ppm", 165, 46);
+      M5.Displays(0).drawString("mS/cm", 165, 46);
     } else {
-      M5.Displays(0).drawString("ppm", 185, 46);
+      M5.Displays(0).drawString("mS/cm", 185, 46);
     }
 
     M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
@@ -258,7 +258,7 @@ void loop() {
     M5.Displays(0).drawString("C", 148, 190);
 
     M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString("%", 300, 190);
+    M5.Displays(0).drawString("mV", 300, 190);
 
     M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
 

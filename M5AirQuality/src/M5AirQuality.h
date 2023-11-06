@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Version
-#define VERSION "1.0.3"
-#define AUTHOR  "F4HWN"
-#define NAME    "M5AirQuality"
+#define VERSION "1.0.0"
+#define AUTHOR  "Tin Nguyen"
+#define NAME    "WaterQuality"
 
 #define RANDOM 1  // Set to 1 for random view
 #define CORE   1

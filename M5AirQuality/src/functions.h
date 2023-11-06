@@ -26,13 +26,13 @@ void viewUI() {
 
   M5.Displays(0).setTextDatum(CL_DATUM);
   M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("CO2 Air Quality", 90, 21);
+  M5.Displays(0).drawString("Electrical Conductivity", 90, 21);
   M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
   M5.Displays(0).drawString("Temperature", 90, 165);
   M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Humidity", 250, 165);
+  M5.Displays(0).drawString("ORP", 250, 165);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 222, 232);
+  M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
 }
 
 // View battery
