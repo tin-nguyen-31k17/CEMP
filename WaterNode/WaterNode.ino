@@ -3,7 +3,7 @@
 #include <esp_now.h>
 #include "sensor_data.h"
 
-#define WIFI_CHANNEL 0
+#define WIFI_CHANNEL 1
 #define SENSOR_COUNT 4
 
 uint8_t Gateway_Mac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
