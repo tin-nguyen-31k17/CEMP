@@ -14,8 +14,8 @@
 #include "sensor_data.h"
 #include "MQTT_helper.h"
 
-#define SOFTAP_SSID "SSID"
-#define SOFTAP_PASS "Password"
+#define SOFTAP_SSID "HPCCLAB"
+#define SOFTAP_PASS "hpccw1f1"
 #define SENSOR_COUNT 4
 
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
@@ -125,6 +125,12 @@ void setup() {
 
   // Connect to WiFi
   Serial.print("Connecting to WiFi...");
+  for (uint8_t i = 0; i < 5; i++) {
+    M5.Displays(0).drawString("Connecting to " + String(SOFTAP_SSID) , 160, 100);
+    delay(1000);
+    M5.Displays(0).drawString("", 160, 100);
+    delay(500);
+  }
 
   // Set device in AP mode to begin with
   WiFi.mode(WIFI_AP_STA);

@@ -124,7 +124,11 @@ void loop() {
   esp_now_register_send_cb([](const uint8_t* mac, esp_now_send_status_t sendStatus){
     // callback for message sent out
     messageSent = true; // flag message is sent out
-    Serial.printf("Message sent out, sendStatus = %i\n", sendStatus);
+    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+      Serial.println("Message sent successfully!");
+    } else {
+      Serial.println("Message sent failed!");
+    }
   });
 
   messageSent = false;
@@ -133,7 +137,12 @@ void loop() {
   const uint8_t *peer_addr = gateway.peer_addr;
   esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
 
-  Serial.print("Sending result: "); Serial.println(result);
+  if (result == ESP_OK) {
+    Serial.println("Success");
+  } else {
+    Serial.print("Sending result: ");
+    Serial.println(result);
+  }
 
   Serial.println();
   delay(5000);

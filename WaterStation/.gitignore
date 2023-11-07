@@ -8,5 +8,5 @@
 **/esp32.svd
 
 .pio
-.vscode/
+.vscode/*
 platformio-device-monitor*
