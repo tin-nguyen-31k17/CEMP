@@ -4,8 +4,8 @@ void viewUI() {
 
   M5.Displays(0).fillScreen(TFT_SCREEN_BG);
   M5.Displays(0).drawPng(EC, sizeof(EC), 16, 16, 64, 64);
-  M5.Displays(0).drawPng(temperature, sizeof(temperature), 16, 160, 64, 64);
-  M5.Displays(0).drawPng(ORP, sizeof(ORP), 176, 160, 64, 64);
+  M5.Displays(0).drawPng(Temp, sizeof(Temp), 16, 160, 64, 64);
+  M5.Displays(0).drawPng(ORP, sizeof(ORP), 176, 160, 65, 65);
   M5.Displays(0).drawPng(pH, sizeof(pH), 176, 16, 64, 64);
 
   M5.Displays(0).fillRect(16 + 64 * 0 + 8 * 0, 110, 64, 10, TFT_GREEN);
@@ -28,11 +28,12 @@ void viewUI() {
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).drawString("Water pH", 250, 24);
   M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Temperature", 90, 168);
+  M5.Displays(0).drawString("Water Temp", 90, 168);
   M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("ORP", 250, 168);
+  M5.Displays(0).drawString("Water ORP", 250, 168);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
+  // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
+  M5.Displays(0).drawString("V" + String(VERSION), 280, 232);
 }
 
 // View battery
@@ -42,44 +43,38 @@ void viewBattery() {
   uint8_t batteryLevel;
   boolean batteryCharging;
 
-  // On left, view battery level
-  batteryLevel    = map(getBatteryLevel(), 0, 100, 0, 17);
+  // View battery level
+  batteryLevel = map(getBatteryLevel(), 0, 100, 0, 17);
   batteryCharging = isCharging();
 
-  // Serial.printf(">>> %d %d %d %d\n", batteryLevel, batteryLevelOld,
-  // batteryCharging, batteryCharginglOld);
+  // Always update battery level and charging status
+  batteryLevelOld = batteryLevel;
+  batteryCharginglOld = batteryCharging;
 
-  if (batteryLevel != batteryLevelOld || batteryCharging != batteryCharginglOld) {
-    // M5.Displays(display).drawFastHLine(0, 20, 320, TFT_BLACK);
+  M5.Displays(0).drawRect(293, 4, 21, 12, TFT_WHITE);
+  M5.Displays(0).drawRect(313, 7, 4, 6, TFT_WHITE);
 
-    batteryLevelOld     = batteryLevel;
-    batteryCharginglOld = batteryCharging;
-
-    M5.Displays(0).drawRect(293, 4, 21, 12, TFT_WHITE);
-    M5.Displays(0).drawRect(313, 7, 4, 6, TFT_WHITE);
-
-    for (uint8_t i = 0; i < batteryLevel; i++) {
-      M5.Displays(0).drawGradientVLine(295 + i, 6, 8, TFT_GREEN, TFT_DARKGREEN);
-    }
-
-    M5.Displays(0).drawFastVLine(300, 5, 10, TFT_SCREEN_BG);
-    M5.Displays(0).drawFastVLine(306, 5, 10, TFT_SCREEN_BG);
-
-    if (batteryCharging) {
-      M5.Displays(0).setTextColor(TFT_WHITE);
-      M5.Displays(0).setFont(&arial6pt7b);
-      M5.Displays(0).setTextDatum(CC_DATUM);
-      M5.Displays(0).setTextPadding(0);
-      snprintf(buf, 8, "%s", "+");
-    } else {
-      M5.Displays(0).setTextColor(TFT_WHITE);
-      M5.Displays(0).setFont(0);
-      M5.Displays(0).setTextDatum(CR_DATUM);
-      M5.Displays(0).setTextPadding(0);
-      snprintf(buf, 8, "%d%s", getBatteryLevel(), "%");
-    }
-    M5.Displays(0).drawString(buf, 290, 11);
+  for (uint8_t i = 0; i < batteryLevel; i++) {
+    M5.Displays(0).drawGradientVLine(295 + i, 6, 8, TFT_GREEN, TFT_DARKGREEN);
   }
+
+  M5.Displays(0).drawFastVLine(300, 5, 10, TFT_SCREEN_BG);
+  M5.Displays(0).drawFastVLine(306, 5, 10, TFT_SCREEN_BG);
+
+  if (batteryCharging) {
+    M5.Displays(0).setTextColor(TFT_WHITE);
+    M5.Displays(0).setFont(&arial6pt7b);
+    M5.Displays(0).setTextDatum(CC_DATUM);
+    M5.Displays(0).setTextPadding(0);
+    snprintf(buf, 8, "%s", "+");
+  } else {
+    M5.Displays(0).setTextColor(TFT_WHITE);
+    M5.Displays(0).setFont(0);
+    M5.Displays(0).setTextDatum(CR_DATUM);
+    M5.Displays(0).setTextPadding(0);
+    snprintf(buf, 8, "%d%s", getBatteryLevel(), "%");
+  }
+  M5.Displays(0).drawString(buf, 290, 11);
 }
 
 // Init Led
@@ -91,26 +86,8 @@ void initLed() {
   FastLED.show();
 }
 
-// Init sensor SCD4x
-void initSensor() {
-  Serial.begin(115200);
-  while (!Serial)
-    ;
-
-  // Init I2C
-  Wire.begin();        // Port A
-  //Wire.begin(14, 13);  // Port C available on M5GO2 for Core2
-
-  // Wait until sensors are ready, > 1000 ms according to datasheet
-  delay(1000);
-
-  // Start SCD4x measurement in periodic mode, will update every 5s
-  Wire.beginTransmission(SCD_ADDRESS);
-  Wire.write(0x21);
-  Wire.write(0xb1);
-  Wire.endTransmission();
-
-  // Wait for first measurement to be finished
+void initPhysical() {
+  // Init Display
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).setTextDatum(CC_DATUM);
@@ -124,42 +101,19 @@ void initSensor() {
     FastLED.setBrightness(16);
     FastLED.show();
 
-    M5.Displays(0).drawString("Please wait - Init CO2 Sensor", 160, 90);
-    delay(500);
-    M5.Displays(0).drawString("", 160, 90);
+    M5.Displays(0).drawString("Please wait! Initializing...", 160, 100);
+    delay(1000);
+    M5.Displays(0).drawString("", 160, 100);
     delay(500);
   }
 #else
   for (uint8_t i = 0; i < 5; i++) {
-    M5.Displays(0).drawString("Please wait - Init CO2 Sensor", 160, 90);
-    delay(500);
-    M5.Displays(0).drawString("", 160, 90);
+    M5.Displays(0).drawString("Please wait! Initializing...", 160, 100);
+    delay(1000);
+    M5.Displays(0).drawString("", 160, 100);
     delay(500);
   }
 #endif
-}
-
-// Get temperature offset
-float getTemperatureOffset() {
-  uint8_t data[12], counter;
-  counter = 0;
-
-  Wire.beginTransmission(SCD_ADDRESS);
-  Wire.write(0x23);
-  Wire.write(0x16);
-  Wire.endTransmission();
-
-  Wire.requestFrom(SCD_ADDRESS, 12);
-
-  while (Wire.available()) {
-    data[counter++] = Wire.read();
-  }
-
-  // Wait for first measurement to be finished
-  delay(1000);
-
-  // Return result
-  return 175 * (float)((uint16_t)data[0] << 8 | data[1]) / 65536;
 }
 
 // Fade all led
@@ -305,3 +259,40 @@ void button(void *pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
+
+// Check water quality
+void checkWaterQuality(float EC, float pH, float ORP, float Temp) {
+  // Normalize the sensor values to range from 0 to 1
+  float normalizedEC = EC / 2000;
+  float normalizedpH = (14 - pH) / 14; // assuming neutral pH is best
+  float normalizedORP = (ORP + 2000) / 4000; // assuming higher ORP is better
+  float normalizedTemp = (60 - Temp) / 60; // assuming lower temperature is better
+
+  // Calculate a weighted sum of the sensor values
+  float weightedSum = 0.4 * normalizedEC + 0.2 * normalizedpH + 0.2 * normalizedORP + 0.2 * normalizedTemp;
+
+  // Check the water quality based on the weighted sum
+  if (weightedSum < 0.25) {
+    M5.Displays(0).fillRect(16 + 64 * 0 + 8 * 0, 100, 64, 2, TFT_WHITE);
+    m5goColor = CRGB::Green;
+  } else if (weightedSum < 0.5) {
+    M5.Displays(0).fillRect(16 + 64 * 1 + 8 * 1, 100, 64, 2, TFT_WHITE);
+    m5goColor = CRGB::Yellow;
+  } else if (weightedSum < 0.75) {
+    M5.Displays(0).fillRect(16 + 64 * 2 + 8 * 2, 100, 64, 2, TFT_WHITE);
+    m5goColor = CRGB::Orange;
+  } else {
+    M5.Displays(0).fillRect(16 + 64 * 3 + 8 * 3, 100, 64, 2, TFT_WHITE);
+    m5goColor = CRGB::Red;
+  }
+}
+
+// Detail for each range of `weightedSum`:
+
+// - **`weightedSum < 0.25` (Green)**: This indicates that the water quality is good. In a real-world scenario, this could mean that the water is safe for most uses, including drinking, cooking, bathing, and irrigation. The sensor readings are in the optimal range for all or most of the parameters. For example, the EC (Electrical Conductivity) might be low, indicating low levels of dissolved salts and other inorganic substances. The pH might be close to neutral, which is generally considered optimal for most aquatic life and for human use. The ORP (Oxidation-Reduction Potential) might be high, indicating that the water has a good capacity to break down contaminants. The temperature might be within a suitable range for most aquatic life.
+
+// - **`0.25 <= weightedSum < 0.5` (Yellow)**: This indicates that the water quality is acceptable, but not optimal. In a real-world scenario, this could mean that the water is safe for some uses, such as irrigation, but might not be safe for others, such as drinking or cooking, without treatment. The sensor readings are in the acceptable range for all or most of the parameters, but some readings may be outside the optimal range. For example, the EC might be moderately high, indicating a moderate level of dissolved salts and other inorganic substances. The pH might be slightly acidic or slightly alkaline. The ORP might be moderately high. The temperature might be slightly higher or lower than the optimal range for most aquatic life.
+
+// - **`0.5 <= weightedSum < 0.75` (Orange)**: This indicates that the water quality is poor. In a real-world scenario, this could mean that the water is not safe for many uses without treatment. The sensor readings are outside the optimal range for several parameters, and may be outside the acceptable range for some parameters. For example, the EC might be high, indicating a high level of dissolved salts and other inorganic substances. The pH might be moderately acidic or moderately alkaline. The ORP might be moderately low, indicating that the water has a reduced capacity to break down contaminants. The temperature might be significantly higher or lower than the optimal range for most aquatic life.
+
+// - **`weightedSum >= 0.75` (Red)**: This indicates that the water quality is very poor or potentially hazardous. In a real-world scenario, this could mean that the water is not safe for any use without significant treatment. The sensor readings are outside the acceptable range for most or all of the parameters. For example, the EC might be very high, indicating a very high level of dissolved salts and other inorganic substances. The pH might be highly acidic or highly alkaline. The ORP might be low, indicating that the water has a poor capacity to break down contaminants. The temperature might be extremely higher or lower than the optimal range for most aquatic life.

@@ -1,3 +1,11 @@
+/*
+  Project: CEMP Mobility Water Monitoring Station
+  File: WaterStation.cpp
+  Author: Nguyen Trong Tin
+  Email:tin.nguyen.31k17@hcmut.edu.vn
+  Description: This code is part of the CEMP Mobility Water Monitoring Station project. It is used to monitor several sensors and publish the data to MQTT along with a nice UI to show sensor data and the battery level.
+*/
+
 #include "WaterStation.h"
 #include "tools.h"
 #include "images.h"
@@ -6,8 +14,8 @@
 #include "sensor_data.h"
 #include "MQTT_helper.h"
 
-#define SOFTAP_SSID "A-Automator"
-#define SOFTAP_PASS "Cmbuilderx@X"
+#define SOFTAP_SSID "HPCCLAB"
+#define SOFTAP_PASS "hpccw1f1"
 #define SENSOR_COUNT 4
 
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
@@ -47,16 +55,11 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
     Serial.print(", ");
   }
   Serial.println();
-
-  // int index = 0;
+  
+  // Process and publish the received data to MQTT
   for (int i = 0; i < SENSOR_COUNT; i++) {
-    // int highByte = receivedData[index++];
-    // int lowByte = receivedData[index++];
-    // sensorReadings[i] = (highByte * 256) + lowByte;
     sensorReadings[i]=receivedData[i];
   }
-
-  // Process and publish the received data to MQTT
   String data_to_pub;
   data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3]);
   myMQTT.publish("/innovation/watermonitoring/", data_to_pub);
@@ -64,7 +67,14 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
 
 // Setup
 void setup() {
-  // Init M5
+  // Init Serial
+  Serial.begin(115200);
+
+  // Init Preferences
+  preferences.begin(NAME);
+  brightness = preferences.getUInt("brightness", BRIGHTNESS);
+  Serial.printf("Brightness = %d\n", brightness);
+
   auto cfg = M5.config();
 
   cfg.clear_display = true;   // default=true. clear the screen when begin.
@@ -83,11 +93,6 @@ void setup() {
   cfg.external_display.module_rca     = false;  // default=false. use ModuleRCA VideoOutput
 
   M5.begin(cfg);
-
-  // Init Preferences
-  preferences.begin(NAME);
-  brightness = preferences.getUInt("brightness", BRIGHTNESS);
-  Serial.printf("Brightness = %d\n", brightness);
 
   // Init Leds
 #if BOARD != CORES3
@@ -112,12 +117,10 @@ void setup() {
   initLed();
 #endif
 
-  // Get temperature offset
-  // temperatureOffset = getTemperatureOffset();
+  // Init Physical
+  initPhysical();
 
-  // Init Sensor
-  initSensor();
-
+  // Init Variant
   initVariant();
 
   // Connect to WiFi
@@ -191,96 +194,77 @@ void setup() {
 
 // Main loop
 void loop() {
-  float EC, temperature, ORP;
-  uint8_t data[12], counter;
-
-  // view battery
+  // refresh UI each 5 seconds
+  viewUI();
   viewBattery();
 
-  // Send read data command
-  Wire.beginTransmission(SCD_ADDRESS);
-  Wire.write(0xec);
-  Wire.write(0x05);
-  Wire.endTransmission();
-
-  Wire.requestFrom(SCD_ADDRESS, 12);
-  counter = 0;
-  while (Wire.available()) {
-    data[counter++] = Wire.read();
-  }
-
-  // Floating point conversion according to datasheet
-  // co2 = (float)((uint16_t)data[0] << 8 | data[1]);
-  // // Convert T in deg C
-  // temperature = -45 + 175 * (float)((uint16_t)data[3] << 8 | data[4]) / 65535 - temperatureOffset;
-  // // Convert RH in %
-  // humidity = 100 * (float)((uint16_t)data[6] << 8 | data[7]) / 65535;
-
+  float EC, pH, Temp, ORP;
   EC = receivedData[0];
-  temperature = receivedData[3];
+  pH = receivedData[1];
+  Temp = receivedData[3];
   ORP = receivedData[2];
 
-  // Serial.printf("co2 %02f, temperature %02f, temperature offset %02f, humidity %02f\n", co2, temperature,
-  //               temperatureOffset, humidity);
+  // Render result to screen
+  M5.Displays(0).setFont(&digital_7__mono_24pt7b);
+  M5.Displays(0).setTextDatum(CL_DATUM);
 
-  if (temperature > -10) {
-    // View result
-    M5.Displays(0).setFont(&digital_7__mono_24pt7b);
-    M5.Displays(0).setTextDatum(CL_DATUM);
+  M5.Displays(0).setTextPadding(40);
+  M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
+  M5.Displays(0).drawString(String(int(EC)), 90, 50);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).drawString(String(int(pH)), 250, 50);
+  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
+  M5.Displays(0).drawString(String(int(Temp)), 90, 195);
 
-    M5.Displays(0).setTextPadding(40);
-    M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-    M5.Displays(0).drawString(String(int(EC)), 90, 50);
-    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString(String(int(EC)), 250, 50);
-
-    M5.Displays(0).setTextPadding(40);
-    M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString(String(int(temperature)), 90, 195);
-    M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+  M5.Displays(0).setTextPadding(0);
+  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+  if (ORP < 100) {
     M5.Displays(0).drawString(String(int(ORP)), 250, 195);
-
-    M5.Displays(0).setFont(&arial6pt7b);
-    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-    M5.Displays(0).setTextDatum(CL_DATUM);
-    M5.Displays(0).setTextPadding(20);
-
-    M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-    if (EC < 1000) {
-      M5.Displays(0).drawString("mS/cm", 125, 50);
-    } else {
-      M5.Displays(0).drawString("mS/cm", 145, 50);
-    }
-
-    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString("pH", 280, 50);
-
-    M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString("o", 120, 190);
-    M5.Displays(0).drawString("C", 128, 195);
-
-    M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString("mV", 280, 195);
-
-    M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
-
-    if (EC < 1000) {
-      M5.Displays(0).fillRect(16 + 64 * 0 + 8 * 0, 100, 64, 2, TFT_WHITE);
-      m5goColor = CRGB::Green;
-    } else if (EC < 2000) {
-      M5.Displays(0).fillRect(16 + 64 * 1 + 8 * 1, 100, 64, 2, TFT_WHITE);
-      m5goColor = CRGB::Yellow;
-    } else if (EC < 3000) {
-      M5.Displays(0).fillRect(16 + 64 * 2 + 8 * 2, 100, 64, 2, TFT_WHITE);
-      m5goColor = CRGB::Orange;
-    } else {
-      M5.Displays(0).fillRect(16 + 64 * 3 + 8 * 3, 100, 64, 2, TFT_WHITE);
-      m5goColor = CRGB::Blue;
-    }
+  } else {
+    M5.Displays(0).drawString(String(int(ORP)), 240, 195);
   }
 
+  M5.Displays(0).setFont(&arial6pt7b);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).setTextDatum(CL_DATUM);
+  M5.Displays(0).setTextPadding(0);
+
+  M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
+  if (EC < 100) {
+    M5.Displays(0).drawString("mS/cm", 125, 63);
+  } else {
+    M5.Displays(0).drawString("mS/cm", 145, 63);
+  }
+
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  if (pH < 10) {
+    M5.Displays(0).drawString("pH", 285, 63);
+  } else {
+    M5.Displays(0).drawString("pH", 295, 63);
+  }
+
+  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
+  if (Temp < 20) {
+    M5.Displays(0).drawString("o", 120, 185);
+    M5.Displays(0).drawString("C", 128, 190);
+  } else {
+    M5.Displays(0).drawString("o", 140, 185);
+    M5.Displays(0).drawString("C", 148, 190);
+  }
+
+  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+  if (ORP < 100) {
+    M5.Displays(0).drawString("mV", 292, 208);
+  } else {
+    M5.Displays(0).drawString("mV", 292, 218);
+  }
+
+  M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
+
+  checkWaterQuality(EC, pH, Temp, ORP);
+
   // Wait for next measurement
-  delay(5000);
+  delay(10000);
   myMQTT.checkConnect();
   M5.update();
 }
