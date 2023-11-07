@@ -32,7 +32,8 @@ void viewUI() {
   M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
   M5.Displays(0).drawString("ORP", 250, 168);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
+  // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
+  M5.Displays(0).drawString("V" + String(VERSION), 280, 232);
 }
 
 // View battery
@@ -91,26 +92,8 @@ void initLed() {
   FastLED.show();
 }
 
-// Init sensor SCD4x
-void initSensor() {
-  Serial.begin(115200);
-  while (!Serial)
-    ;
-
-  // Init I2C
-  Wire.begin();        // Port A
-  //Wire.begin(14, 13);  // Port C available on M5GO2 for Core2
-
-  // Wait until sensors are ready, > 1000 ms according to datasheet
-  delay(1000);
-
-  // Start SCD4x measurement in periodic mode, will update every 5s
-  Wire.beginTransmission(SCD_ADDRESS);
-  Wire.write(0x21);
-  Wire.write(0xb1);
-  Wire.endTransmission();
-
-  // Wait for first measurement to be finished
+void initPhysical() {
+  // Init Display
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).setTextDatum(CC_DATUM);
@@ -124,42 +107,19 @@ void initSensor() {
     FastLED.setBrightness(16);
     FastLED.show();
 
-    M5.Displays(0).drawString("Please wait - Init CO2 Sensor", 160, 90);
-    delay(500);
-    M5.Displays(0).drawString("", 160, 90);
+    M5.Displays(0).drawString("Please wait! Initializing...", 160, 100);
+    delay(1000);
+    M5.Displays(0).drawString("", 160, 100);
     delay(500);
   }
 #else
   for (uint8_t i = 0; i < 5; i++) {
-    M5.Displays(0).drawString("Please wait - Init CO2 Sensor", 160, 90);
-    delay(500);
-    M5.Displays(0).drawString("", 160, 90);
+    M5.Displays(0).drawString("Please wait! Initializing...", 160, 100);
+    delay(1000);
+    M5.Displays(0).drawString("", 160, 100);
     delay(500);
   }
 #endif
-}
-
-// Get temperature offset
-float getTemperatureOffset() {
-  uint8_t data[12], counter;
-  counter = 0;
-
-  Wire.beginTransmission(SCD_ADDRESS);
-  Wire.write(0x23);
-  Wire.write(0x16);
-  Wire.endTransmission();
-
-  Wire.requestFrom(SCD_ADDRESS, 12);
-
-  while (Wire.available()) {
-    data[counter++] = Wire.read();
-  }
-
-  // Wait for first measurement to be finished
-  delay(1000);
-
-  // Return result
-  return 175 * (float)((uint16_t)data[0] << 8 | data[1]) / 65536;
 }
 
 // Fade all led

@@ -1,7 +1,15 @@
+/*
+  Project: CEMP Mobility Water Monitoring Station
+  File: WaterStation.h
+  Author: Nguyen Trong Tin
+  Email:tin.nguyen.31k17@hcmut.edu.vn
+  Description: This code is part of the CEMP Mobility Water Monitoring Station project. It is the header file of the WaterStation.cpp file.
+*/
+
 // Version
 #define VERSION "1.0.0"
 #define AUTHOR  "Tin Nguyen"
-#define NAME    "WaterQuality"
+#define NAME    "WaterStation"
 
 #define RANDOM 1  // Set to 1 for random view
 #define CORE   1

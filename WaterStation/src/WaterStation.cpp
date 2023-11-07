@@ -1,3 +1,11 @@
+/*
+  Project: CEMP Mobility Water Monitoring Station
+  File: WaterStation.cpp
+  Author: Nguyen Trong Tin
+  Email:tin.nguyen.31k17@hcmut.edu.vn
+  Description: This code is part of the CEMP Mobility Water Monitoring Station project. It is used to monitor several sensors and publish the data to MQTT along with a nice UI to show sensor data and the battery level.
+*/
+
 #include "WaterStation.h"
 #include "tools.h"
 #include "images.h"
@@ -65,6 +73,7 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
 // Setup
 void setup() {
   // Init M5
+  Serial.begin(115200);
   auto cfg = M5.config();
 
   cfg.clear_display = true;   // default=true. clear the screen when begin.
@@ -112,12 +121,10 @@ void setup() {
   initLed();
 #endif
 
-  // Get temperature offset
-  // temperatureOffset = getTemperatureOffset();
+  // Init Physical
+  initPhysical();
 
-  // Init Sensor
-  initSensor();
-
+  // Init Variant
   initVariant();
 
   // Connect to WiFi
@@ -191,39 +198,16 @@ void setup() {
 
 // Main loop
 void loop() {
-  float EC, temperature, ORP;
-  uint8_t data[12], counter;
+  float EC, Temp, ORP;
 
   // view battery
   viewBattery();
 
-  // Send read data command
-  Wire.beginTransmission(SCD_ADDRESS);
-  Wire.write(0xec);
-  Wire.write(0x05);
-  Wire.endTransmission();
-
-  Wire.requestFrom(SCD_ADDRESS, 12);
-  counter = 0;
-  while (Wire.available()) {
-    data[counter++] = Wire.read();
-  }
-
-  // Floating point conversion according to datasheet
-  // co2 = (float)((uint16_t)data[0] << 8 | data[1]);
-  // // Convert T in deg C
-  // temperature = -45 + 175 * (float)((uint16_t)data[3] << 8 | data[4]) / 65535 - temperatureOffset;
-  // // Convert RH in %
-  // humidity = 100 * (float)((uint16_t)data[6] << 8 | data[7]) / 65535;
-
   EC = receivedData[0];
-  temperature = receivedData[3];
+  Temp = receivedData[3];
   ORP = receivedData[2];
 
-  // Serial.printf("co2 %02f, temperature %02f, temperature offset %02f, humidity %02f\n", co2, temperature,
-  //               temperatureOffset, humidity);
-
-  if (temperature > -10) {
+  if (Temp > -10) {
     // View result
     M5.Displays(0).setFont(&digital_7__mono_24pt7b);
     M5.Displays(0).setTextDatum(CL_DATUM);
@@ -236,7 +220,7 @@ void loop() {
 
     M5.Displays(0).setTextPadding(40);
     M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString(String(int(temperature)), 90, 195);
+    M5.Displays(0).drawString(String(int(Temp)), 90, 195);
     M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
     M5.Displays(0).drawString(String(int(ORP)), 250, 195);
 
