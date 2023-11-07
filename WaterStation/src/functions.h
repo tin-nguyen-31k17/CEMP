@@ -3,9 +3,10 @@ void viewUI() {
   M5.Displays(0).setBrightness(brightness);
 
   M5.Displays(0).fillScreen(TFT_SCREEN_BG);
-  M5.Displays(0).drawPng(co2, sizeof(co2), 16, 16, 64, 64);
+  M5.Displays(0).drawPng(EC, sizeof(EC), 16, 16, 64, 64);
   M5.Displays(0).drawPng(temperature, sizeof(temperature), 16, 160, 64, 64);
-  M5.Displays(0).drawPng(humidity, sizeof(humidity), 176, 160, 64, 64);
+  M5.Displays(0).drawPng(ORP, sizeof(ORP), 176, 160, 64, 64);
+  M5.Displays(0).drawPng(pH, sizeof(pH), 176, 16, 64, 64);
 
   M5.Displays(0).fillRect(16 + 64 * 0 + 8 * 0, 110, 64, 10, TFT_GREEN);
   M5.Displays(0).fillRect(16 + 64 * 1 + 8 * 1, 110, 64, 10, TFT_YELLOW);
@@ -23,11 +24,13 @@ void viewUI() {
 
   M5.Displays(0).setTextDatum(CL_DATUM);
   M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Electrical Conductivity", 90, 21);
+  M5.Displays(0).drawString("Water EC", 90, 24);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).drawString("Water pH", 250, 24);
   M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Temperature", 90, 165);
+  M5.Displays(0).drawString("Temperature", 90, 168);
   M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("ORP", 250, 165);
+  M5.Displays(0).drawString("ORP", 250, 168);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
 }

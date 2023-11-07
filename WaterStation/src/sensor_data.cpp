@@ -20,7 +20,7 @@ String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float 
   ec_sensor["sensor_id"] = "ec_0001";
   ec_sensor["sensor_name"] = "EC 0001";
   ec_sensor["sensor_value"] = floatToString(EC);
-  ec_sensor["sensor_unit"] = "μS/cm";
+  ec_sensor["sensor_unit"] = "mS/cm";
 
   JsonObject ph_sensor = sensors.createNestedObject();
   ph_sensor["sensor_id"] = "ph_0001";

@@ -6,8 +6,8 @@
 #include "sensor_data.h"
 #include "MQTT_helper.h"
 
-#define SOFTAP_SSID "SSID"
-#define SOFTAP_PASS "Password"
+#define SOFTAP_SSID "A-Automator"
+#define SOFTAP_PASS "Cmbuilderx@X"
 #define SENSOR_COUNT 4
 
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
@@ -191,7 +191,7 @@ void setup() {
 
 // Main loop
 void loop() {
-  float co2, temperature, humidity;
+  float EC, temperature, ORP;
   uint8_t data[12], counter;
 
   // view battery
@@ -216,9 +216,9 @@ void loop() {
   // // Convert RH in %
   // humidity = 100 * (float)((uint16_t)data[6] << 8 | data[7]) / 65535;
 
-  co2 = receivedData[0];
+  EC = receivedData[0];
   temperature = receivedData[3];
-  humidity = receivedData[2];
+  ORP = receivedData[2];
 
   // Serial.printf("co2 %02f, temperature %02f, temperature offset %02f, humidity %02f\n", co2, temperature,
   //               temperatureOffset, humidity);
@@ -228,15 +228,17 @@ void loop() {
     M5.Displays(0).setFont(&digital_7__mono_24pt7b);
     M5.Displays(0).setTextDatum(CL_DATUM);
 
-    M5.Displays(0).setTextPadding(160);
+    M5.Displays(0).setTextPadding(40);
     M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-    M5.Displays(0).drawString(String(int(co2)), 90, 46);
+    M5.Displays(0).drawString(String(int(EC)), 90, 50);
+    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+    M5.Displays(0).drawString(String(int(EC)), 250, 50);
 
     M5.Displays(0).setTextPadding(40);
     M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString(String(int(temperature)), 90, 190);
+    M5.Displays(0).drawString(String(int(temperature)), 90, 195);
     M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString(String(int(humidity)), 250, 190);
+    M5.Displays(0).drawString(String(int(ORP)), 250, 195);
 
     M5.Displays(0).setFont(&arial6pt7b);
     M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
@@ -244,28 +246,31 @@ void loop() {
     M5.Displays(0).setTextPadding(20);
 
     M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-    if (co2 < 1000) {
-      M5.Displays(0).drawString("mS/cm", 165, 46);
+    if (EC < 1000) {
+      M5.Displays(0).drawString("mS/cm", 125, 50);
     } else {
-      M5.Displays(0).drawString("mS/cm", 185, 46);
+      M5.Displays(0).drawString("mS/cm", 145, 50);
     }
 
+    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+    M5.Displays(0).drawString("pH", 280, 50);
+
     M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString("o", 140, 185);
-    M5.Displays(0).drawString("C", 148, 190);
+    M5.Displays(0).drawString("o", 120, 190);
+    M5.Displays(0).drawString("C", 128, 195);
 
     M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-    M5.Displays(0).drawString("mV", 300, 190);
+    M5.Displays(0).drawString("mV", 280, 195);
 
     M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
 
-    if (co2 < 1000) {
+    if (EC < 1000) {
       M5.Displays(0).fillRect(16 + 64 * 0 + 8 * 0, 100, 64, 2, TFT_WHITE);
       m5goColor = CRGB::Green;
-    } else if (co2 < 2000) {
+    } else if (EC < 2000) {
       M5.Displays(0).fillRect(16 + 64 * 1 + 8 * 1, 100, 64, 2, TFT_WHITE);
       m5goColor = CRGB::Yellow;
-    } else if (co2 < 3000) {
+    } else if (EC < 3000) {
       M5.Displays(0).fillRect(16 + 64 * 2 + 8 * 2, 100, 64, 2, TFT_WHITE);
       m5goColor = CRGB::Orange;
     } else {
