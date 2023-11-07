@@ -14,8 +14,8 @@
 #include "sensor_data.h"
 #include "MQTT_helper.h"
 
-#define SOFTAP_SSID "HPCCLAB"
-#define SOFTAP_PASS "hpccw1f1"
+#define SOFTAP_SSID "SSID"
+#define SOFTAP_PASS "Password"
 #define SENSOR_COUNT 4
 
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
