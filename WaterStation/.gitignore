@@ -9,5 +9,4 @@
 
 .pio
 .vscode/
-.DS_Store
 platformio-device-monitor*
