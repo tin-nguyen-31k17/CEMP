@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project utilizes the M5 Atom as a node, another M5 Atom (theoretically any M5 ESP32 based device would work) as a gateway and for the station, a Core/Core 2/Core S3 can be utilize to display nice UI. It's an extension of the code available on [BKInnovation_codeC](https://github.com/HyHyZhaLee/BKInnovation_codeC) & [M5AirQuality](https://github.com/armel/M5AirQuality/). The project introduces two communication channels: WiFi for internet connectivity for MQTT server communication, as well as ESPNow (one-way communication) between the WaterNode and WaterGateway/WaterStation. Please note that it's crucial to configure the WiFi router's channel to 0/1 to prevent interference with ESPNow's operation.
+This project utilizes the M5 Atom as a node, another M5 Atom (theoretically any M5 ESP32 based device would work) as a gateway and for the station, a Core/Core 2/Core S3 can be utilize to display nice UI. It's a combination, extending functionality and features of 2 projects [BKInnovation_codeC](https://github.com/HyHyZhaLee/BKInnovation_codeC) & [M5AirQuality](https://github.com/armel/M5AirQuality/). The project introduces two communication channels: WiFi for internet connectivity for MQTT server communication, as well as ESPNow (one-way communication) between the WaterNode and WaterGateway/WaterStation. Please note that it's crucial to configure the WiFi router's channel to 0/1 to prevent interference with ESPNow's operation.
 
 ## Features
 
