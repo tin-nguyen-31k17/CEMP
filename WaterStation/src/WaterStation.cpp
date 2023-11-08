@@ -14,8 +14,8 @@
 #include "sensor_data.h"
 #include "MQTT_helper.h"
 
-#define SOFTAP_SSID "HPCCLAB"
-#define SOFTAP_PASS "hpccw1f1"
+#define SOFTAP_SSID "A-Automator"
+#define SOFTAP_PASS "Cmbuilderx@X"
 #define SENSOR_COUNT 4
 
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
@@ -125,12 +125,10 @@ void setup() {
 
   // Connect to WiFi
   Serial.print("Connecting to WiFi...");
-  for (uint8_t i = 0; i < 5; i++) {
-    M5.Displays(0).drawString("Connecting to " + String(SOFTAP_SSID) , 160, 100);
-    delay(1000);
-    M5.Displays(0).drawString("", 160, 100);
-    delay(500);
-  }
+  M5.Displays(0).drawString("Connecting to " + String(SOFTAP_SSID) + "...", 160, 100);
+  delay(2000);
+  M5.Displays(0).drawString("", 160, 100);
+  delay(250);
 
   // Set device in AP mode to begin with
   WiFi.mode(WIFI_AP_STA);
@@ -139,10 +137,18 @@ void setup() {
   while (wifiMulti.run() != WL_CONNECTED) {
     delay(500);
     Serial.print("Can't connect to network \n");
+    M5.Displays(0).drawString("Can't connect to " + String(SOFTAP_SSID) + "!" , 160, 100);
+    delay(2000);
+    M5.Displays(0).drawString("", 160, 100);
+    delay(250);
   }
 
   // Print WiFi data
   Serial.println("Connected!");
+  M5.Displays(0).drawString("Connected to " + String(SOFTAP_SSID) + "!", 160, 100);
+  delay(2000);
+  M5.Displays(0).drawString("", 160, 100);
+  delay(250);
   Serial.println("Set as AP_STA station.");
   Serial.print("SSID: ");
   Serial.println(WiFi.SSID());
@@ -150,7 +156,7 @@ void setup() {
   Serial.println(WiFi.channel());
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-  delay(1000);
+  delay(250);
 
   myMQTT.connectToMQTT(); // Connect to MQTT server
   myMQTT.subscribe("/innovation/watermonitoring/");
@@ -170,8 +176,16 @@ void setup() {
 
   if (esp_now_init() == ESP_OK) {
     Serial.println("ESPNow Init Successfully!");
+    M5.Displays(0).drawString("ESPNow Init Successfully!", 160, 100);
+    delay(2000);
+    M5.Displays(0).drawString("", 160, 100);
+    delay(250);
   } else {
     Serial.println("ESPNow Init Failed!");
+    M5.Displays(0).drawString("ESPNow Init Failed!", 160, 100);
+    delay(2000);
+    M5.Displays(0).drawString("", 160, 100);
+    delay(250);
     ESP.restart();
   }
 

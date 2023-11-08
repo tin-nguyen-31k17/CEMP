@@ -1,8 +1,8 @@
 // View UI
 void viewUI() {
   M5.Displays(0).setBrightness(brightness);
-
   M5.Displays(0).fillScreen(TFT_SCREEN_BG);
+
   M5.Displays(0).drawPng(EC, sizeof(EC), 16, 16, 64, 64);
   M5.Displays(0).drawPng(Temp, sizeof(Temp), 16, 160, 64, 64);
   M5.Displays(0).drawPng(ORP, sizeof(ORP), 176, 160, 65, 65);
@@ -32,6 +32,7 @@ void viewUI() {
   M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
   M5.Displays(0).drawString("Water ORP", 250, 168);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+
   // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
   M5.Displays(0).drawString("V" + String(VERSION), 280, 232);
 }
@@ -43,7 +44,6 @@ void viewBattery() {
   uint8_t batteryLevel;
   boolean batteryCharging;
 
-  // View battery level
   batteryLevel = map(getBatteryLevel(), 0, 100, 0, 17);
   batteryCharging = isCharging();
 
