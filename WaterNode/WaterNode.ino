@@ -1,6 +1,7 @@
 #include <M5Atom.h>
 #include <WiFi.h>
 #include <esp_now.h>
+#include <AES.h>
 #include "sensor_data.h"
 
 #define WIFI_CHANNEL 1
@@ -11,6 +12,18 @@ volatile boolean messageSent;
 uint8_t receivedData[9];
 uint8_t dataToSend[SENSOR_COUNT * 2]; // Array to send sensor readings
 float sensorReadings[SENSOR_COUNT] = {0};
+
+// Define encryption key (16 bytes)
+byte encryptionKey[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+
+// Function to encrypt data
+void encryptData(uint8_t* data, size_t dataLength) {
+  AES aes;
+  aes.set_key(encryptionKey, sizeof(encryptionKey));
+  for (int i = 0; i < dataLength; i += N_BLOCK) {
+    aes.encrypt(data + i, data + i);
+  }
+}
 
 // Function to read data from a sensor and store it in an array
 void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
@@ -79,26 +92,26 @@ void loop() {
     switch (i) {
       case 0:
         Serial.println("Reading water EC sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
-        // generateRandomSensorData(sensorReadings[i]);
+//        readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
+         generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water EC: ");
         break;
       case 1:
         Serial.println("Reading water PH sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
-        // generateRandomSensorData(sensorReadings[i]);
+//        readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
+         generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water PH: ");
         break;
       case 2:
         Serial.println("Reading water ORP sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
-        // generateRandomSensorData(sensorReadings[i]);
+//        readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
+         generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water ORP: ");
         break;
       case 3:
         Serial.println("Reading water temperature sensor...");
-        readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
-        // generateRandomSensorData(sensorReadings[i]);
+//        readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
+         generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water Temp: ");
         break;
     }
@@ -107,7 +120,6 @@ void loop() {
 
   // Copy sensor readings to dataToSend
   for (int i = 0; i < SENSOR_COUNT; i++) {
-    int index = i * 2;
   // dataToSend[index] = (uint8_t)(sensorReadings[i] / 256); // High byte
   // dataToSend[index + 1] = (uint8_t)((int)sensorReadings[i] % 256); // Low byte
     dataToSend[i] = (uint8_t)sensorReadings[i];
@@ -120,6 +132,8 @@ void loop() {
     Serial.print(", ");
   }
   Serial.println();
+
+  encryptData(dataToSend, sizeof(dataToSend));
 
   esp_now_register_send_cb([](const uint8_t* mac, esp_now_send_status_t sendStatus){
     // callback for message sent out

@@ -16,6 +16,10 @@
 #define CORE2  2
 #define CORES3 3
 
+#define SOFTAP_SSID "A-Automator"
+#define SOFTAP_PASS "Cmbuilderx@X"
+#define SENSOR_COUNT 4
+
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)
 
 // Dependencies
@@ -30,6 +34,7 @@
 #include <WiFiMulti.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
+#include <AES.h>
 
 // Preferences
 Preferences preferences;
@@ -39,8 +44,8 @@ Preferences preferences;
 #define NUM_LEDS 10
 CRGB leds[NUM_LEDS];
 
-// Sensor SCD4x
-const int16_t SCD_ADDRESS = 0x62;
+// Define decryption key (16 bytes)
+byte decryptionKey[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
 
 // Variables
 uint16_t brightness      = BRIGHTNESS;
@@ -51,3 +56,8 @@ boolean batteryCharginglOld = true;
 float temperatureOffset;
 
 CRGB m5goColor = CRGB::Blue;
+
+uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
+uint8_t receivedData[7];
+
+float sensorReadings[SENSOR_COUNT] = {0};

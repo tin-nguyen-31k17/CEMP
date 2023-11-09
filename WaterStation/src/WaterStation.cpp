@@ -14,13 +14,6 @@
 #include "sensor_data.h"
 #include "MQTT_helper.h"
 
-#define SOFTAP_SSID "A-Automator"
-#define SOFTAP_PASS "Cmbuilderx@X"
-#define SENSOR_COUNT 4
-
-uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
-uint8_t receivedData[7];
-
 // Class Wifi
 WiFiMulti wifiMulti;
 
@@ -30,11 +23,17 @@ MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
 // Class data json already created
 SENSOR_DATA sensorData;
 
-float sensorReadings[SENSOR_COUNT] = {0};
-
 void initVariant() {
   WiFi.mode(WIFI_AP);
   esp_wifi_set_mac(WIFI_IF_AP, &GatewayMac[0]);
+}
+
+void decryptData(uint8_t* data, size_t dataLength) {
+  AES aes;
+  aes.set_key(decryptionKey, sizeof(decryptionKey));
+  for (int i = 0; i < dataLength; i += N_BLOCK) {
+    aes.decrypt(data + i, data + i);
+  }
 }
 
 void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
@@ -44,17 +43,24 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   Serial.print("\nData received from: ");
   Serial.println(macStr);
 
-  for (int i = 0; i < data_len; i++) {
-    receivedData[i] = data[i];
-  }
+  /* For non encrypted data only*/
+  // for (int i = 0; i < data_len; i++) {
+  //   receivedData[i] = data[i];
+  // }
 
-  Serial.print("Data received: ");
+  // Copy the received data
+  memcpy(receivedData, data, data_len);
+
+  Serial.print("Decrypted Data: ");
   for (int i = 0; i < 7; i++) {
     Serial.print("0x");
     Serial.print(receivedData[i], HEX);
     Serial.print(", ");
   }
   Serial.println();
+
+  // Decrypt the received data
+  decryptData(receivedData, data_len);
   
   // Process and publish the received data to MQTT
   for (int i = 0; i < SENSOR_COUNT; i++) {
