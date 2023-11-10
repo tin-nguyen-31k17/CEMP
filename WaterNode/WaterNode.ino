@@ -1,17 +1,26 @@
+//#include <M5Stack.h>
 #include <M5Atom.h>
 #include <WiFi.h>
 #include <esp_now.h>
 #include <AES.h>
 #include "sensor_data.h"
+#include "GPSAnalyse.h"
 
 #define WIFI_CHANNEL 1
 #define SENSOR_COUNT 4
+
+float Lat;
+float Lon;
+String Utc;
 
 uint8_t Gateway_Mac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
 volatile boolean messageSent;
 uint8_t receivedData[9];
 uint8_t dataToSend[SENSOR_COUNT * 2]; // Array to send sensor readings
 float sensorReadings[SENSOR_COUNT] = {0};
+HardwareSerial GPSRaw(1);
+static const uint32_t GPSBaud = 9600;
+GPSAnalyse GPS;
 
 // Define encryption key (16 bytes)
 byte encryptionKey[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
@@ -25,16 +34,36 @@ void encryptData(uint8_t* data, size_t dataLength) {
   }
 }
 
-// Function to read data from a sensor and store it in an array
-void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
-  Serial2.write(sensorData, 8);
-  delay(1000);
-
-  if (Serial2.available()) {
-    Serial2.readBytes(receivedData, sizeof(receivedData));
-    sensorReading = decode_32bit(receivedData); // Use the decode_32bit function to parse the sensor data
+// Function to read GPS data
+void readGPS() {
+  if (Serial.available()) {
+    int c = Serial.read();
+    Serial.write(c);
+    Serial.printf("Latitude= %.5f \r\n", Lat);
+    Serial.printf("Longitude= %.5f \r\n", Lon);
+    Serial.printf("DATA= %s \r\n", Utc.c_str());
   }
+  if (GPSRaw.available()) {
+    int c = GPSRaw.read();
+    Serial.write(c);
+    Serial.printf("Latitude= %.5f \r\n", Lat);
+    Serial.printf("Longitude= %.5f \r\n", Lon);
+    Serial.printf("DATA= %s \r\n", Utc.c_str());
+  }
+  GPS.upDate();
 }
+
+
+// Function to read data from a sensor and store it in an array
+//void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
+//  Serial2.write(sensorData, 8);
+//  delay(1000);
+//
+//  if (Serial2.available()) {
+//    Serial2.readBytes(receivedData, sizeof(receivedData));
+//    sensorReading = decode_32bit(receivedData); // Use the decode_32bit function to parse the sensor data
+//  }
+//}
 
 // For test without real sensor
 void generateRandomSensorData(float& sensorReading) {
@@ -66,8 +95,12 @@ float decode_32bit(uint8_t receivedData[9]) {
 }
 
 void setup() {
-  M5.begin(true, false, true);
-  Serial2.begin(9600, SERIAL_8N1, 22, 19);
+  M5.begin();
+  GPSRaw.begin(9600, SERIAL_8N1, 32, 26);
+  GPS.setTaskName("GPS");
+  GPS.setTaskPriority(2);
+  GPS.setSerialPtr(GPSRaw);
+  GPS.start();
   while (!Serial) {};
   Serial.println("\n\nStarting up...");
 
@@ -76,6 +109,10 @@ void setup() {
 
   if (esp_now_init() != ESP_OK) {
     Serial.println("ESPNow initialization failed!");
+    delay(100);
+  }
+  else {
+    Serial.println("ESPNow initialization successfully!");
     delay(100);
   }
 }
@@ -88,6 +125,27 @@ void loop() {
   gateway.encrypt = false; // No encryption
   esp_now_add_peer(&gateway);
 
+  // Read GPS data
+  readGPS();
+
+  Serial.print("Latitude: ");
+  Serial.println(Lat, 6);
+  Serial.print("Longitude: ");
+  Serial.println(Lon, 6);
+
+  // Check for valid GPS fix before accessing location data
+//  if (GPS.location.isValid()) {
+//    // Get latitude and longitude from GPS
+//    float latitude, longitude;
+//    getGPSData(latitude, longitude);
+//
+//    Serial.print("Latitude: ");
+//    Serial.println(latitude, 6);
+//    Serial.print("Longitude: ");
+//    Serial.println(longitude, 6);
+//  } else {
+//    Serial.println("Waiting for valid GPS fix...");
+//  }
   for (int i = 0; i < SENSOR_COUNT; i++) {
     switch (i) {
       case 0:
