@@ -7,7 +7,7 @@
 */
 
 // Version
-#define VERSION "1.0.1"
+#define VERSION "1.1.0"
 #define AUTHOR  "Tin Nguyen"
 #define NAME    "WaterStation"
 
@@ -16,9 +16,11 @@
 #define CORE2  2
 #define CORES3 3
 
-#define SOFTAP_SSID "A-Automator"
-#define SOFTAP_PASS "Cmbuilderx@X"
-#define SENSOR_COUNT 4
+// #define SOFTAP_SSID "A-Automator"
+// #define SOFTAP_PASS "Cmbuilderx@X"
+#define SOFTAP_SSID "HPCCLAB"
+#define SOFTAP_PASS "hpccw1f1"
+#define SENSOR_COUNT 7
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)
 
@@ -43,9 +45,6 @@ Preferences preferences;
 #define FASTLED_INTERNAL  // To disable pragma messages on compile
 #define NUM_LEDS 10
 CRGB leds[NUM_LEDS];
-
-// Define decryption key (16 bytes)
-byte decryptionKey[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
 
 // Variables
 uint16_t brightness      = BRIGHTNESS;

@@ -6,13 +6,19 @@ String SENSOR_DATA::floatToString(float value) {
   sprintf(buffer, "%.2f", value);
   return String(buffer);
 }
-String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float TEMP) {
+String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float TEMP, float LON, float LAT) {
   DynamicJsonDocument doc(1024);
 
   doc["station_id"] = "water_0001";
   doc["station_name"] = "WATER 0001";
-  doc["gps_longitude"] = 106.99;
-  doc["gps_latitude"] = 10.2;
+  if (LON != 0 && LAT != 0) {
+    doc["gps_longitude"] = floatToString(LON);
+    doc["gps_latitude"] = floatToString(LAT);
+  }
+  else {
+    doc["gps_longitude"] = 106.99;
+    doc["gps_latitude"] = 10.2;
+  }
 
   JsonArray sensors = doc.createNestedArray("sensors");
 
@@ -20,7 +26,7 @@ String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float 
   ec_sensor["sensor_id"] = "ec_0001";
   ec_sensor["sensor_name"] = "EC 0001";
   ec_sensor["sensor_value"] = floatToString(EC);
-  ec_sensor["sensor_unit"] = "mS/cm";
+  ec_sensor["sensor_unit"] = "ms/cm";
 
   JsonObject ph_sensor = sensors.createNestedObject();
   ph_sensor["sensor_id"] = "ph_0001";
@@ -48,7 +54,6 @@ String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float 
   Serial.println();
   return jsonString;
 }
-///////////////////////////////////////
 
 SENSOR_RS485::SENSOR_RS485(){
   data_water_ec = new uint8_t[8]{0x04, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x5E};

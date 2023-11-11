@@ -7,7 +7,7 @@ class SENSOR_DATA{
   public:
     SENSOR_DATA(){};
     String floatToString(float value);
-    String createWaterStationJSON(float EC, float PH, float ORP, float TEMP) ;
+    String createWaterStationJSON(float EC, float PH, float ORP, float TEMP, float LON, float LAT);
 };
 
 class SENSOR_RS485{

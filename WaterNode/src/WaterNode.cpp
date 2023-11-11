@@ -1,58 +1,108 @@
-//#include <M5Stack.h>
+#include <TinyGPSPlus.h>
 #include <M5Atom.h>
 #include <WiFi.h>
 #include <esp_now.h>
-#include <AES.h>
 #include "sensor_data.h"
-#include "GPSAnalyse.h"
 
 #define WIFI_CHANNEL 1
-#define SENSOR_COUNT 4
+#define SENSOR_COUNT 8
 
-float Lat;
-float Lon;
-String Utc;
+#define GPS_RX_PIN 32
+#define GPS_TX_PIN 26
+#define DELAY_BETWEEN_READINGS 5000
+
+static const uint32_t GPSBaud = 9600;
+
+TinyGPSPlus gps;
+
+HardwareSerial ss(1);
 
 uint8_t Gateway_Mac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
 volatile boolean messageSent;
 uint8_t receivedData[9];
-uint8_t dataToSend[SENSOR_COUNT * 2]; // Array to send sensor readings
+uint8_t dataToSend[SENSOR_COUNT] = {0}; // Array to send sensor readings
 float sensorReadings[SENSOR_COUNT] = {0};
-HardwareSerial GPSRaw(1);
-static const uint32_t GPSBaud = 9600;
-GPSAnalyse GPS;
+float Lon, Lat;
 
-// Define encryption key (16 bytes)
-byte encryptionKey[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
-
-// Function to encrypt data
-void encryptData(uint8_t* data, size_t dataLength) {
-  AES aes;
-  aes.set_key(encryptionKey, sizeof(encryptionKey));
-  for (int i = 0; i < dataLength; i += N_BLOCK) {
-    aes.encrypt(data + i, data + i);
-  }
+static void smartDelay(unsigned long ms) {
+    unsigned long start = millis();
+    do {
+        while (ss.available()) gps.encode(ss.read());
+    } while (millis() - start < ms);
 }
 
-// Function to read GPS data
-void readGPS() {
-  if (Serial.available()) {
-    int c = Serial.read();
-    Serial.write(c);
-    Serial.printf("Latitude= %.5f \r\n", Lat);
-    Serial.printf("Longitude= %.5f \r\n", Lon);
-    Serial.printf("DATA= %s \r\n", Utc.c_str());
-  }
-  if (GPSRaw.available()) {
-    int c = GPSRaw.read();
-    Serial.write(c);
-    Serial.printf("Latitude= %.5f \r\n", Lat);
-    Serial.printf("Longitude= %.5f \r\n", Lon);
-    Serial.printf("DATA= %s \r\n", Utc.c_str());
-  }
-  GPS.upDate();
+static void printInt(unsigned long val, bool valid, int len) {
+    char sz[32] = "Waiting... ";
+    if (valid) sprintf(sz, "%ld", val);
+    sz[len] = 0;
+    for (int i = strlen(sz); i < len; ++i) sz[i] = ' ';
+    if (len > 0) sz[len - 1] = ' ';
+    Serial.print(sz);
+    smartDelay(0);
 }
 
+static void printFloat(float val, bool valid, int len, int prec) {
+    if (!valid) {
+        while (len-- > 1) Serial.print('*');
+        Serial.print(' ');
+    } else {
+        Serial.print(val, prec);
+        int vi   = abs((int)val);
+        int flen = prec + (val < 0.0 ? 2 : 1);  // . and -
+        flen += vi >= 1000 ? 4 : vi >= 100 ? 3 : vi >= 10 ? 2 : 1;
+        for (int i = flen; i < len; ++i) Serial.print(' ');
+    }
+    smartDelay(0);
+}
+
+static void printChar(char *val, int len) {
+    Serial.print(val);
+    int slen = strlen(val);
+    for (int i = slen; i < len; ++i) Serial.print(' ');
+    smartDelay(0);
+}
+
+static void printStr(const char *str, int len) {
+    int slen = strlen(str);
+    for (int i = 0; i < len; ++i) Serial.print(i < slen ? str[i] : ' ');
+    smartDelay(0);
+}
+
+static void printDateTime(TinyGPSDate &d, TinyGPSTime &t) {
+    if (!d.isValid()) {
+        Serial.print(F("No Valid Date"));
+    } else {
+        char sz[32];
+        sprintf(sz, "%02d/%02d/%02d ", d.month(), d.day(), d.year());
+        Serial.print(sz);
+    }
+
+    if (!t.isValid()) {
+        Serial.print(F("No Valid Time"));
+    } else {
+        char sz[32];
+        sprintf(sz, "%02d:%02d:%02d ", t.hour(), t.minute(), t.second());
+        Serial.print(sz);
+    }
+
+    printInt(d.age(), d.isValid(), 5);
+    smartDelay(0);
+}
+
+static void PrintGPS() {
+    printInt(gps.satellites.value(), gps.satellites.isValid(), 5);
+    printInt(gps.hdop.value(), gps.hdop.isValid(), 5);
+    printFloat(gps.location.lat(), gps.location.isValid(), 11, 6);
+    printFloat(gps.location.lng(), gps.location.isValid(), 12, 6);
+    printInt(gps.location.age(), gps.location.isValid(), 5);
+    printDateTime(gps.date, gps.time);
+    printFloat(gps.altitude.meters(), gps.altitude.isValid(), 7, 2);
+    printFloat(gps.course.deg(), gps.course.isValid(), 7, 2);
+    printFloat(gps.speed.kmph(), gps.speed.isValid(), 6, 2);
+    printStr(
+        gps.course.isValid() ? TinyGPSPlus::cardinal(gps.course.deg()) : "*** ",
+        6);
+}
 
 // Function to read data from a sensor and store it in an array
 //void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
@@ -96,11 +146,7 @@ float decode_32bit(uint8_t receivedData[9]) {
 
 void setup() {
   M5.begin();
-  GPSRaw.begin(9600, SERIAL_8N1, 32, 26);
-  GPS.setTaskName("GPS");
-  GPS.setTaskPriority(2);
-  GPS.setSerialPtr(GPSRaw);
-  GPS.start();
+  ss.begin(GPSBaud, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN); 
   while (!Serial) {};
   Serial.println("\n\nStarting up...");
 
@@ -110,8 +156,7 @@ void setup() {
   if (esp_now_init() != ESP_OK) {
     Serial.println("ESPNow initialization failed!");
     delay(100);
-  }
-  else {
+  } else {
     Serial.println("ESPNow initialization successfully!");
     delay(100);
   }
@@ -125,27 +170,6 @@ void loop() {
   gateway.encrypt = false; // No encryption
   esp_now_add_peer(&gateway);
 
-  // Read GPS data
-  readGPS();
-
-  Serial.print("Latitude: ");
-  Serial.println(Lat, 6);
-  Serial.print("Longitude: ");
-  Serial.println(Lon, 6);
-
-  // Check for valid GPS fix before accessing location data
-//  if (GPS.location.isValid()) {
-//    // Get latitude and longitude from GPS
-//    float latitude, longitude;
-//    getGPSData(latitude, longitude);
-//
-//    Serial.print("Latitude: ");
-//    Serial.println(latitude, 6);
-//    Serial.print("Longitude: ");
-//    Serial.println(longitude, 6);
-//  } else {
-//    Serial.println("Waiting for valid GPS fix...");
-//  }
   for (int i = 0; i < SENSOR_COUNT; i++) {
     switch (i) {
       case 0:
@@ -174,38 +198,48 @@ void loop() {
         break;
     }
     Serial.println(sensorReadings[i]);
+
+    Lon = gps.location.lng();
+    Serial.println("Longitude: " + String(Lon));
+    Lat = gps.location.lat();
+    Serial.println("Latitude: " + String(Lat));
+    String DateTime = String(gps.date.month()) + "/" + String(gps.date.day()) + "/" + String(gps.date.year()) + " " + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
+    Serial.println("Date and Time of measurement: " + DateTime);
+
+    smartDelay(1000);
+
+    if (millis() > 5000 && gps.charsProcessed() < 10)
+        Serial.println(F("No GPS data received: check wiring"));
   }
 
   // Copy sensor readings to dataToSend
   for (int i = 0; i < SENSOR_COUNT; i++) {
-  // dataToSend[index] = (uint8_t)(sensorReadings[i] / 256); // High byte
-  // dataToSend[index + 1] = (uint8_t)((int)sensorReadings[i] % 256); // Low byte
     dataToSend[i] = (uint8_t)sensorReadings[i];
   }
+  dataToSend[4] = (uint8_t)Lon;
+  dataToSend[5] = (uint8_t)Lat;
 
   Serial.print("Data to be send: ");
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < SENSOR_COUNT; i++) {
     Serial.print("0x");
     Serial.print(dataToSend[i], HEX);
     Serial.print(", ");
   }
   Serial.println();
 
-  encryptData(dataToSend, sizeof(dataToSend));
-
   esp_now_register_send_cb([](const uint8_t* mac, esp_now_send_status_t sendStatus){
-    // callback for message sent out
-    messageSent = true; // flag message is sent out
+    messageSent = true;
     if (sendStatus == ESP_NOW_SEND_SUCCESS) {
       Serial.println("Message sent successfully!");
+      Serial.println();
     } else {
       Serial.println("Message sent failed!");
+      Serial.println();
     }
   });
 
   messageSent = false;
 
-  // Send message -----------------------------------
   const uint8_t *peer_addr = gateway.peer_addr;
   esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
 
@@ -217,6 +251,7 @@ void loop() {
   }
 
   Serial.println();
-  delay(5000);
+
+  delay(DELAY_BETWEEN_READINGS);
   M5.update();
 }

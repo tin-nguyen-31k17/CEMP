@@ -8,29 +8,29 @@ void viewUI() {
   M5.Displays(0).drawPng(ORP, sizeof(ORP), 176, 160, 65, 65);
   M5.Displays(0).drawPng(pH, sizeof(pH), 176, 16, 64, 64);
 
-  M5.Displays(0).fillRect(16 + 64 * 0 + 8 * 0, 110, 64, 10, TFT_GREEN);
-  M5.Displays(0).fillRect(16 + 64 * 1 + 8 * 1, 110, 64, 10, TFT_YELLOW);
-  M5.Displays(0).fillRect(16 + 64 * 2 + 8 * 2, 110, 64, 10, TFT_ORANGE);
-  M5.Displays(0).fillRect(16 + 64 * 3 + 8 * 3, 110, 64, 10, TFT_RED);
+  M5.Displays(0).fillRect(16 + 64 * 0.05 + 8 * 0.05, 118, 64, 10, TFT_GREEN);
+  M5.Displays(0).fillRect(16 + 64 * 1.05 + 8 * 1.05, 118, 64, 10, TFT_YELLOW);
+  M5.Displays(0).fillRect(16 + 64 * 2.05 + 8 * 2.05, 118, 64, 10, TFT_ORANGE);
+  M5.Displays(0).fillRect(16 + 64 * 3.05 + 8 * 3.05, 118, 64, 10, TFT_RED);
 
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).setTextDatum(CC_DATUM);
   M5.Displays(0).setTextPadding(20);
 
-  M5.Displays(0).drawString("GOOD", 50, 130);
-  M5.Displays(0).drawString("OK", 155, 130);
-  M5.Displays(0).drawString("BAD", 265, 130);
+  M5.Displays(0).drawString("GOOD", 51, 138);
+  M5.Displays(0).drawString("OK", 156, 138);
+  M5.Displays(0).drawString("BAD", 266, 138);
 
   M5.Displays(0).setTextDatum(CL_DATUM);
   M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
   M5.Displays(0).drawString("Water EC", 90, 24);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Water pH", 250, 24);
+  M5.Displays(0).drawString("Water pH", 248, 24);
   M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
   M5.Displays(0).drawString("Water Temp", 90, 168);
   M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Water ORP", 250, 168);
+  M5.Displays(0).drawString("Water ORP", 248, 168);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
 
   // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
@@ -273,16 +273,16 @@ void checkWaterQuality(float EC, float pH, float ORP, float Temp) {
 
   // Check the water quality based on the weighted sum
   if (weightedSum < 0.25) {
-    M5.Displays(0).fillRect(16 + 64 * 0 + 8 * 0, 100, 64, 2, TFT_WHITE);
+    M5.Displays(0).fillRect(16 + 64 * 0.05 + 8 * 0.05, 108, 64, 2, TFT_WHITE);
     m5goColor = CRGB::Green;
   } else if (weightedSum < 0.5) {
-    M5.Displays(0).fillRect(16 + 64 * 1 + 8 * 1, 100, 64, 2, TFT_WHITE);
+    M5.Displays(0).fillRect(16 + 64 * 1.05 + 8 * 1.05, 108, 64, 2, TFT_WHITE);
     m5goColor = CRGB::Yellow;
   } else if (weightedSum < 0.75) {
-    M5.Displays(0).fillRect(16 + 64 * 2 + 8 * 2, 100, 64, 2, TFT_WHITE);
+    M5.Displays(0).fillRect(16 + 64 * 2.05 + 8 * 2.05, 108, 64, 2, TFT_WHITE);
     m5goColor = CRGB::Orange;
   } else {
-    M5.Displays(0).fillRect(16 + 64 * 3 + 8 * 3, 100, 64, 2, TFT_WHITE);
+    M5.Displays(0).fillRect(16 + 64 * 3.05 + 8 * 3.05, 108, 64, 2, TFT_WHITE);
     m5goColor = CRGB::Red;
   }
 }

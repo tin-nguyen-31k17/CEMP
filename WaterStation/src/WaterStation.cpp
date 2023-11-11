@@ -28,25 +28,12 @@ void initVariant() {
   esp_wifi_set_mac(WIFI_IF_AP, &GatewayMac[0]);
 }
 
-void decryptData(uint8_t* data, size_t dataLength) {
-  AES aes;
-  aes.set_key(decryptionKey, sizeof(decryptionKey));
-  for (int i = 0; i < dataLength; i += N_BLOCK) {
-    aes.decrypt(data + i, data + i);
-  }
-}
-
 void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   char macStr[24];
   snprintf(macStr, sizeof(macStr), " %02x:%02x:%02x:%02x:%02x:%02x",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
   Serial.print("\nData received from: ");
   Serial.println(macStr);
-
-  /* For non encrypted data only*/
-  // for (int i = 0; i < data_len; i++) {
-  //   receivedData[i] = data[i];
-  // }
 
   // Copy the received data
   memcpy(receivedData, data, data_len);
@@ -58,16 +45,14 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
     Serial.print(", ");
   }
   Serial.println();
-
-  // Decrypt the received data
-  decryptData(receivedData, data_len);
   
   // Process and publish the received data to MQTT
   for (int i = 0; i < SENSOR_COUNT; i++) {
     sensorReadings[i]=receivedData[i];
   }
+
   String data_to_pub;
-  data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3]);
+  data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], sensorReadings[4], sensorReadings[5]);
   myMQTT.publish("/innovation/watermonitoring/", data_to_pub);
 }
 
@@ -224,30 +209,53 @@ void loop() {
   viewUI();
   viewBattery();
 
-  float EC, pH, Temp, ORP;
+  float EC, pH, Temp, ORP, Lon, Lat;
   EC = receivedData[0];
   pH = receivedData[1];
   Temp = receivedData[3];
   ORP = receivedData[2];
+  Lon = receivedData[4];
+  Lat = receivedData[5];
+
+  if (Lon == 0 && Lat == 0) {
+    Lon = 106.99;
+    Lat = 10.2;
+  }
+
+  // Display Long and Lat at the center of 240x320 screen
+  M5.Displays(0).setFont(&arial6pt7b);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).setTextDatum(CC_DATUM);
+  M5.Displays(0).setTextPadding(20);
+  String longLat = "Long: " + String(float(Lon)) + " Lat: " + String(float(Lat));
+  M5.Displays(0).drawString(longLat, 160, 94);
 
   // Render result to screen
   M5.Displays(0).setFont(&digital_7__mono_24pt7b);
   M5.Displays(0).setTextDatum(CL_DATUM);
-
   M5.Displays(0).setTextPadding(40);
-  M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-  M5.Displays(0).drawString(String(int(EC)), 90, 50);
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString(String(int(pH)), 250, 50);
-  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString(String(int(Temp)), 90, 195);
-
-  M5.Displays(0).setTextPadding(0);
-  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  if (ORP < 100) {
-    M5.Displays(0).drawString(String(int(ORP)), 250, 195);
+  if (EC > 19 || EC < 9) {
+    M5.Displays(0).drawString(String(int(EC)), 90, 50);
   } else {
-    M5.Displays(0).drawString(String(int(ORP)), 240, 195);
+    M5.Displays(0).drawString(String(int(EC)), 80, 50);
+  }
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  if (pH > 19 || pH < 9) {
+    M5.Displays(0).drawString(String(int(pH)), 248, 50);
+  } else {
+    M5.Displays(0).drawString(String(int(pH)), 244, 50);
+  }
+  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
+  if (Temp > 19 || Temp < 9) {
+    M5.Displays(0).drawString(String(int(Temp)), 90, 195);
+  } else {
+    M5.Displays(0).drawString(String(int(Temp)), 80, 195);
+  }
+  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+  if (ORP < 9 || ORP > 19) {
+    M5.Displays(0).drawString(String(int(ORP)), 248, 195);
+  } else {
+    M5.Displays(0).drawString(String(int(ORP)), 244, 195);
   }
 
   M5.Displays(0).setFont(&arial6pt7b);
@@ -256,10 +264,13 @@ void loop() {
   M5.Displays(0).setTextPadding(0);
 
   M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-  if (EC < 100) {
-    M5.Displays(0).drawString("mS/cm", 125, 63);
-  } else {
+  if (EC > 9) {
+    M5.Displays(0).drawString("mS/cm", 135, 63);
+  }
+  if (EC > 99) {
     M5.Displays(0).drawString("mS/cm", 145, 63);
+  } else {
+    M5.Displays(0).drawString("mS/cm", 125, 63);
   }
 
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);

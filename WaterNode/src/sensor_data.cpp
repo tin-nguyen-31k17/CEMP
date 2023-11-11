@@ -6,13 +6,19 @@ String SENSOR_DATA::floatToString(float value) {
   sprintf(buffer, "%.2f", value);
   return String(buffer);
 }
-String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float TEMP) {
+String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float TEMP, float LON, float LAT) {
   DynamicJsonDocument doc(1024);
 
   doc["station_id"] = "water_0001";
   doc["station_name"] = "WATER 0001";
-  doc["gps_longitude"] = 106.99;
-  doc["gps_latitude"] = 10.2;
+  if (LON != 0 && LAT != 0) {
+    doc["gps_longitude"] = LON;
+    doc["gps_latitude"] = LAT;
+  }
+  else {
+    doc["gps_longitude"] = 106.99;
+    doc["gps_latitude"] = 10.2;
+  }
 
   JsonArray sensors = doc.createNestedArray("sensors");
 
