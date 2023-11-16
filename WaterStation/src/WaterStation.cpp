@@ -209,26 +209,32 @@ void loop() {
   viewUI();
   viewBattery();
 
-  float EC, pH, Temp, ORP, Lon, Lat;
+  float EC, pH, Temp, ORP;
   EC = receivedData[0];
   pH = receivedData[1];
   Temp = receivedData[3];
   ORP = receivedData[2];
   Lon = receivedData[4];
   Lat = receivedData[5];
+  Day = receivedData[6];
+  Month = receivedData[7];
+  Year = receivedData[8];
+  Hour = receivedData[9];
+  Minute = receivedData[10];
+  Second = receivedData[11];
+  dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second) + " GPS: " + String(float(Lon)) + ":" + String(float(Lat));
 
   if (Lon == 0 && Lat == 0) {
     Lon = 106.99;
     Lat = 10.2;
   }
 
-  // Display Long and Lat at the center of 240x320 screen
+  // Display DateTime & Long:Lat at the center of 240x320 screen
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).setTextDatum(CC_DATUM);
   M5.Displays(0).setTextPadding(20);
-  String longLat = "Long: " + String(float(Lon)) + " Lat: " + String(float(Lat));
-  M5.Displays(0).drawString(longLat, 160, 94);
+  M5.Displays(0).drawString(dateTimeGPS, 160, 96);
 
   // Render result to screen
   M5.Displays(0).setFont(&digital_7__mono_24pt7b);

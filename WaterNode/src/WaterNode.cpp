@@ -1,123 +1,31 @@
-#include <TinyGPSPlus.h>
-#include <M5Atom.h>
-#include <WiFi.h>
-#include <esp_now.h>
 #include "sensor_data.h"
+#include "WaterNode.h"
 
-#define WIFI_CHANNEL 1
-#define SENSOR_COUNT 8
+// Function to check if the message failed to send and back it up
+void backupMessage(const uint8_t* data, size_t size) {
+    if (backupIndex + size <= BACKUP_BUFFER_SIZE) {
+        memcpy(backupBuffer + backupIndex, data, size);
+        backupIndex += size;
+        Serial.println("Message backed up successfully!");
+    } else {
+        Serial.println("Backup buffer full. Deleting the oldest data.");
+        size_t bytesToDelete = backupIndex + size - BACKUP_BUFFER_SIZE;
+        memmove(backupBuffer, backupBuffer + bytesToDelete, backupIndex - bytesToDelete);
+        backupIndex -= bytesToDelete;
 
-#define GPS_RX_PIN 32
-#define GPS_TX_PIN 26
-#define DELAY_BETWEEN_READINGS 5000
+        // Add new data to the buffer
+        memcpy(backupBuffer + backupIndex, data, size);
+        backupIndex += size;
 
-static const uint32_t GPSBaud = 9600;
-
-TinyGPSPlus gps;
-
-HardwareSerial ss(1);
-
-uint8_t Gateway_Mac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
-volatile boolean messageSent;
-uint8_t receivedData[9];
-uint8_t dataToSend[SENSOR_COUNT] = {0}; // Array to send sensor readings
-float sensorReadings[SENSOR_COUNT] = {0};
-float Lon, Lat;
+        Serial.println("Backup buffer after deletion: " + String(backupIndex) + " bytes");
+    }
+}
 
 static void smartDelay(unsigned long ms) {
     unsigned long start = millis();
     do {
         while (ss.available()) gps.encode(ss.read());
     } while (millis() - start < ms);
-}
-
-static void printInt(unsigned long val, bool valid, int len) {
-    char sz[32] = "Waiting... ";
-    if (valid) sprintf(sz, "%ld", val);
-    sz[len] = 0;
-    for (int i = strlen(sz); i < len; ++i) sz[i] = ' ';
-    if (len > 0) sz[len - 1] = ' ';
-    Serial.print(sz);
-    smartDelay(0);
-}
-
-static void printFloat(float val, bool valid, int len, int prec) {
-    if (!valid) {
-        while (len-- > 1) Serial.print('*');
-        Serial.print(' ');
-    } else {
-        Serial.print(val, prec);
-        int vi   = abs((int)val);
-        int flen = prec + (val < 0.0 ? 2 : 1);  // . and -
-        flen += vi >= 1000 ? 4 : vi >= 100 ? 3 : vi >= 10 ? 2 : 1;
-        for (int i = flen; i < len; ++i) Serial.print(' ');
-    }
-    smartDelay(0);
-}
-
-static void printChar(char *val, int len) {
-    Serial.print(val);
-    int slen = strlen(val);
-    for (int i = slen; i < len; ++i) Serial.print(' ');
-    smartDelay(0);
-}
-
-static void printStr(const char *str, int len) {
-    int slen = strlen(str);
-    for (int i = 0; i < len; ++i) Serial.print(i < slen ? str[i] : ' ');
-    smartDelay(0);
-}
-
-static void printDateTime(TinyGPSDate &d, TinyGPSTime &t) {
-    if (!d.isValid()) {
-        Serial.print(F("No Valid Date"));
-    } else {
-        char sz[32];
-        sprintf(sz, "%02d/%02d/%02d ", d.month(), d.day(), d.year());
-        Serial.print(sz);
-    }
-
-    if (!t.isValid()) {
-        Serial.print(F("No Valid Time"));
-    } else {
-        char sz[32];
-        sprintf(sz, "%02d:%02d:%02d ", t.hour(), t.minute(), t.second());
-        Serial.print(sz);
-    }
-
-    printInt(d.age(), d.isValid(), 5);
-    smartDelay(0);
-}
-
-static void PrintGPS() {
-    printInt(gps.satellites.value(), gps.satellites.isValid(), 5);
-    printInt(gps.hdop.value(), gps.hdop.isValid(), 5);
-    printFloat(gps.location.lat(), gps.location.isValid(), 11, 6);
-    printFloat(gps.location.lng(), gps.location.isValid(), 12, 6);
-    printInt(gps.location.age(), gps.location.isValid(), 5);
-    printDateTime(gps.date, gps.time);
-    printFloat(gps.altitude.meters(), gps.altitude.isValid(), 7, 2);
-    printFloat(gps.course.deg(), gps.course.isValid(), 7, 2);
-    printFloat(gps.speed.kmph(), gps.speed.isValid(), 6, 2);
-    printStr(
-        gps.course.isValid() ? TinyGPSPlus::cardinal(gps.course.deg()) : "*** ",
-        6);
-}
-
-// Function to read data from a sensor and store it in an array
-//void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
-//  Serial2.write(sensorData, 8);
-//  delay(1000);
-//
-//  if (Serial2.available()) {
-//    Serial2.readBytes(receivedData, sizeof(receivedData));
-//    sensorReading = decode_32bit(receivedData); // Use the decode_32bit function to parse the sensor data
-//  }
-//}
-
-// For test without real sensor
-void generateRandomSensorData(float& sensorReading) {
-  sensorReading = random(0, 100);
 }
 
 // Function to decode 32-bit sensor data
@@ -144,15 +52,49 @@ float decode_32bit(uint8_t receivedData[9]) {
   return pow(-1, sign_bit) * pow(2, exponent - 127) * mantissa;
 }
 
+// Function to read data from a sensor and store it in an array
+void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
+ Serial2.write(sensorData, 8);
+ delay(1000);
+
+ if (Serial2.available()) {
+   Serial2.readBytes(receivedData, sizeof(receivedData));
+   sensorReading = decode_32bit(receivedData); // Use the decode_32bit function to parse the sensor data
+ }
+}
+
+// Function to generate random sensor data
+void generateRandomSensorData(float& sensorReading) {
+  sensorReading = random(0, 100); // Random sensor reading for testing
+}
+
+// Function to generate random date-time, longitude, and latitude data
+void generateRandDateTimeGPS() {
+  // Generate random date-time
+  Day = random(1, 31);
+  Month = random(1, 13);
+  Year = random(20, 30);
+  Hour = random(0, 24);
+  Minute = random(0, 60);
+  Second = random(0, 60);
+
+  // Generate random longitude and latitude
+  Lon = random(0, 360);
+  Lat = random(0, 180);
+
+  // Format the date and time as a string
+  dateTime = String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second);
+}
+
 void setup() {
   M5.begin();
   ss.begin(GPSBaud, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN); 
   while (!Serial) {};
   Serial.println("\n\nStarting up...");
 
+  Serial.print("### Setting up ESP-NOW ###");
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
-
   if (esp_now_init() != ESP_OK) {
     Serial.println("ESPNow initialization failed!");
     delay(100);
@@ -160,6 +102,7 @@ void setup() {
     Serial.println("ESPNow initialization successfully!");
     delay(100);
   }
+  Serial.println();
 }
 
 void loop() {
@@ -170,55 +113,70 @@ void loop() {
   gateway.encrypt = false; // No encryption
   esp_now_add_peer(&gateway);
 
+  const uint8_t *peer_addr = gateway.peer_addr;
+
+  Serial.print("### Reading All Sensor Data ###");
   for (int i = 0; i < SENSOR_COUNT; i++) {
     switch (i) {
       case 0:
         Serial.println("Reading water EC sensor...");
-//        readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
-         generateRandomSensorData(sensorReadings[i]);
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water EC: ");
         break;
       case 1:
         Serial.println("Reading water PH sensor...");
-//        readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
-         generateRandomSensorData(sensorReadings[i]);
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water PH: ");
         break;
       case 2:
         Serial.println("Reading water ORP sensor...");
-//        readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
-         generateRandomSensorData(sensorReadings[i]);
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water ORP: ");
         break;
       case 3:
         Serial.println("Reading water temperature sensor...");
-//        readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
-         generateRandomSensorData(sensorReadings[i]);
+        // readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
+        generateRandomSensorData(sensorReadings[i]);
         Serial.print("Water Temp: ");
         break;
     }
     Serial.println(sensorReadings[i]);
-
-    Lon = gps.location.lng();
-    Serial.println("Longitude: " + String(Lon));
-    Lat = gps.location.lat();
-    Serial.println("Latitude: " + String(Lat));
-    String DateTime = String(gps.date.month()) + "/" + String(gps.date.day()) + "/" + String(gps.date.year()) + " " + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
-    Serial.println("Date and Time of measurement: " + DateTime);
-
-    smartDelay(1000);
-
-    if (millis() > 5000 && gps.charsProcessed() < 10)
-        Serial.println(F("No GPS data received: check wiring"));
   }
+  Serial.println();
+
+  Serial.print("### Reading Date-Time, Longitude, and Latitude ###\n");
+  // Generate random date, time, longitude, and latitude
+  generateRandDateTimeGPS();
+  // Lon = gps.location.lng();
+  Serial.print("Longitude: " + String(Lon) + ", ");
+  // Lat = gps.location.lat();
+  Serial.println("Latitude: " + String(Lat));
+  // dateTime = String(gps.date.day()) + "/" + String(gps.date.month()) + "/" + String(gps.date.year()) + " " + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
+  Serial.println("Date and Time of measurement: " + dateTime);
+  Serial.println();
+
+  smartDelay(1000);
+
+  if (millis() > 5000 && gps.charsProcessed() < 10) Serial.println(F("No GPS data received: check wiring"));
 
   // Copy sensor readings to dataToSend
   for (int i = 0; i < SENSOR_COUNT; i++) {
     dataToSend[i] = (uint8_t)sensorReadings[i];
   }
-  dataToSend[4] = (uint8_t)Lon;
-  dataToSend[5] = (uint8_t)Lat;
 
+  dataToSend[4] = Lon;
+  dataToSend[5] = Lat;
+  dataToSend[6] = Day;
+  dataToSend[7] = Month;
+  dataToSend[8] = Year;
+  dataToSend[9] = Hour;
+  dataToSend[10] = Minute;
+  dataToSend[11] = Second;
+
+  Serial.print("### Sending Message ###\n");
   Serial.print("Data to be send: ");
   for (int i = 0; i < SENSOR_COUNT; i++) {
     Serial.print("0x");
@@ -233,14 +191,27 @@ void loop() {
       Serial.println("Message sent successfully!");
       Serial.println();
     } else {
-      Serial.println("Message sent failed!");
+      Serial.println("Message sent failed! Backing up the data.");
+      backupMessage(dataToSend, sizeof(dataToSend));
       Serial.println();
     }
   });
 
+  if (backupIndex > 0) {
+      esp_err_t result = esp_now_send(peer_addr, backupBuffer, backupIndex);
+
+      if (result == ESP_OK) {
+          Serial.println("Backup message sent successfully!");
+          Serial.println();
+          backupIndex = 0; // Reset the backup buffer index after successful send
+      } else {
+          Serial.println("Backup message sending failed! Data will remain in the backup buffer.");
+          Serial.println();
+      }
+  }
+
   messageSent = false;
 
-  const uint8_t *peer_addr = gateway.peer_addr;
   esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
 
   if (result == ESP_OK) {

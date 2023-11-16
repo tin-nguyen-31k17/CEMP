@@ -7,7 +7,7 @@
 */
 
 // Version
-#define VERSION "1.1.0"
+#define VERSION "1.1.3"
 #define AUTHOR  "Tin Nguyen"
 #define NAME    "WaterStation"
 
@@ -16,11 +16,11 @@
 #define CORE2  2
 #define CORES3 3
 
-// #define SOFTAP_SSID "A-Automator"
-// #define SOFTAP_PASS "Cmbuilderx@X"
-#define SOFTAP_SSID "HPCCLAB"
-#define SOFTAP_PASS "hpccw1f1"
-#define SENSOR_COUNT 7
+#define SOFTAP_SSID "A-Automator"
+#define SOFTAP_PASS "Cmbuilderx@X"
+// #define SOFTAP_SSID "HPCCLAB"
+// #define SOFTAP_PASS "hpccw1f1"
+#define SENSOR_COUNT 12
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)
 
@@ -49,14 +49,13 @@ CRGB leds[NUM_LEDS];
 // Variables
 uint16_t brightness      = BRIGHTNESS;
 uint16_t batteryLevelOld = 1024;
-
 boolean batteryCharginglOld = true;
-
 float temperatureOffset;
 
-CRGB m5goColor = CRGB::Blue;
-
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
-uint8_t receivedData[7];
-
+uint8_t receivedData[SENSOR_COUNT] = {0};
 float sensorReadings[SENSOR_COUNT] = {0};
+uint8_t Lon, Lat, Day, Month, Year, Hour, Minute, Second;
+String dateTimeGPS;
+
+CRGB m5goColor = CRGB::Blue;
