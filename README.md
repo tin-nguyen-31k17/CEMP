@@ -7,9 +7,11 @@ The project introduces two communication channels: WiFi for internet connectivit
 
 ## Features
 
-1. **ESPNow Communication:** This project implements ESPNow, facilitating one-way communication between the WaterNode and WaterGateway. The WaterNode transmits sensor data to the WaterGateway.
-
-2. **WiFi Connectivity:** The WaterGateway uses WiFi to connect to the internet and an MQTT server for data publishing. The code includes the necessary WiFi setup.
+1. **ESPNow Communication:** This project implements ESPNow, facilitating one-way communication between the Node and Gateway. The Node transmits sensor data to the Gateway.
+2. **GPS & DateTime:** Utilize the M5 AT6558 GPS module to fetch GPS information to the Node device and send to Gateway for tracking purpose
+3. **Water Sensor Network:** This project employs various water measuring sensor, like pH, ORP, Temp & EC to determine quality of the water source.
+4.  **Offline Backup Data:** Despite the fact that M5 Atom is a very resource-limited device. The program try to handle disconnection from gateway with backup buffer store on SRAM waiting to reconnect and feed data back to the Gateway.
+5.  **WiFi Connectivity:** The WaterGateway uses WiFi to connect to the internet and an MQTT server for data publishing. The code includes the necessary WiFi setup.
 
 ## Prerequisites
 
@@ -24,12 +26,12 @@ The project introduces two communication channels: WiFi for internet connectivit
 
 3. Ensure that your router's WiFi channel is set to either 0, 1 (for some specific routers, 3 or 5) to prevent interference with ESPNow's operation.
 
-4. Upload the code to your WaterNode and WaterGateway/WaterStation devices using PlatformIO or the Arduino IDE.
+4. Upload the code to your end node and Gateway/Station devices using PlatformIO or the Arduino IDE.
 
 ## How It Works
 
-- The WaterNode reads sensor data and sends it to the WaterGateway using the ESPNow protocol.
-- The WaterGateway connects to the internet via WiFi and publishes the received data to an MQTT server.
+- The Node reads water sensor data, GPS information and sends it to the Gateway using the ESPNow protocol.
+- The Gateway connects to the internet via WiFi and publishes the received data to an MQTT server.
 
 ## To-Do List
 
@@ -37,7 +39,7 @@ The project is a work in progress, and there are some planned enhancements:
 
 1. **Two-Way Communication:** Implement two-way communication between the WaterNode and WaterGateway, allowing commands and data to be exchanged in both directions.
 
-2. **Channel Auto-Configuration:** The WaterGateway will have the ability to determine its operating channel and set the WaterNode's channel accordingly to optimize communication.
+2. **Channel Auto-Configuration:** The rGateway will have the ability to determine its operating channel and set the Node's channel accordingly to optimize communication.
 
 3. **Power Optimization:** Optimize the code for low-power operation, allowing devices to sleep when not in use or when not connected to each other.
 
