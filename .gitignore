@@ -11,3 +11,6 @@
 .vscode/
 .DS_Store
 platformio-device-monitor*
+Atom_Gateway/.vscode
+Atom_Node/.vscode
+Core_Station/.vscode
