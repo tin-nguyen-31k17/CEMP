@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/white"
 
-    tools:context=".controller.MainActivity">
+    tools:context="com.example.demoiotdashboard.controller.MainActivity">
 
 <LinearLayout
     android:orientation="vertical"
@@ -14,31 +14,31 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="167dp"
+        android:layout_height="84dp"
         android:background="@color/white">
 
         <ImageView
             android:id="@+id/applogo"
-            android:layout_width="62dp"
-            android:layout_height="50dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="50dp"
-            android:layout_marginRight="20dp"
-            android:src="@drawable/logoapp"
-            android:contentDescription="TODO" />
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_marginLeft="6dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginRight="10dp"
+            android:contentDescription="TODO"
+            android:src="@drawable/logo_oisp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:layout_marginTop="50dp"
-            android:layout_marginEnd="7dp"
-            android:layout_marginBottom="7dp"
+            android:layout_marginStart="22dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
             android:layout_toEndOf="@+id/applogo"
             android:gravity="center"
             android:text="Water Monitoring Dashboard"
             android:textColor="@color/black"
-            android:textSize="28sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
     </RelativeLayout>
@@ -49,28 +49,28 @@
         android:background="@color/black">
 
         <ImageView
-            android:id="@+id/airhumiditylogo"
-            android:layout_width="55dp"
-            android:layout_height="62dp"
+            android:id="@+id/waterTempLogo"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="30dp"
+            android:contentDescription="TODO"
             android:scaleType="centerCrop"
-            android:src="@drawable/airhumidity"
-            android:contentDescription="TODO" />
+            android:src="@drawable/icon_temp" />
+
         <TextView
-            android:id="@+id/txtAirHumidity"
+            android:id="@+id/txtWaterTemp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="18dp"
             android:layout_marginEnd="7dp"
             android:layout_marginBottom="7dp"
-            android:layout_toEndOf="@+id/airhumiditylogo"
-            android:text="pH Sensor: Loading"
+            android:layout_toEndOf="@+id/waterTempLogo"
             android:gravity="center"
+            android:text="Water Temp: Loading"
             android:textColor="@color/white"
-            android:textSize="20sp"
-            />
+            android:textSize="20sp" />
 
     </RelativeLayout>
 
@@ -87,28 +87,28 @@
         android:background="@color/black">
 
         <ImageView
-            android:id="@+id/airtemperature"
-            android:layout_width="62dp"
-            android:layout_height="62dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
+            android:id="@+id/ecLogo"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="30dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/templogo"
+            android:src="@drawable/icon_ec"
             android:contentDescription="TODO" />
-
         <TextView
-            android:id="@+id/txtAirTemperature"
+            android:id="@+id/txtEC"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="3dp"
+            android:layout_marginStart="2dp"
             android:layout_marginTop="15dp"
-            android:layout_marginEnd="3dp"
-            android:layout_marginBottom="3dp"
-            android:layout_toEndOf="@+id/airtemperature"
+            android:layout_marginEnd="7dp"
+            android:layout_marginBottom="7dp"
+            android:layout_toEndOf="@+id/ecLogo"
+            android:text="EC Sensor: Loading"
             android:gravity="center"
-            android:text="Turbidity Sensor: Loading"
             android:textColor="@color/white"
-            android:textSize="20sp" />
+            android:textSize="20sp"
+            />
 
     </RelativeLayout>
 
@@ -116,9 +116,8 @@
         android:id="@+id/graph2"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-
-        android:layout_margin="2dp"
-        android:background="@color/black" />
+        android:background="@color/black"
+        android:layout_margin="2dp"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -126,29 +125,31 @@
         android:background="@color/black">
 
         <ImageView
-            android:id="@+id/soiltemperaturelogo"
-            android:layout_width="55dp"
-            android:layout_height="62dp"
-            android:layout_marginStart="25dp"
+            android:id="@+id/phLogo"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_marginStart="10dp"
             android:layout_marginEnd="30dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/soiltemperature"
+            android:src="@drawable/icon_ph"
             android:contentDescription="TODO" />
         <TextView
-            android:id="@+id/txtSoilTemperature"
+            android:id="@+id/txtPH"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:layout_marginTop="15dp"
             android:layout_marginEnd="7dp"
             android:layout_marginBottom="7dp"
-            android:layout_toEndOf="@+id/soiltemperaturelogo"
-            android:text="Ammonia Sensor: Loading"
+            android:layout_toEndOf="@+id/phLogo"
+            android:text="PH Sensor: Loading"
             android:gravity="center"
             android:textColor="@color/white"
             android:textSize="20sp"
             />
+
     </RelativeLayout>
+
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graph3"
         android:layout_width="match_parent"
@@ -156,7 +157,39 @@
         android:background="@color/black"
         android:layout_margin="2dp"/>
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black">
+
+        <ImageView
+            android:id="@+id/orpLogo"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="30dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/icon_orp"
+            android:contentDescription="TODO" />
+        <TextView
+            android:id="@+id/txtORP"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="7dp"
+            android:layout_marginBottom="7dp"
+            android:layout_toEndOf="@+id/orpLogo"
+            android:text="ORP Sensor: Loading"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            />
+
+    </RelativeLayout>
+
     <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph4"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:background="@color/black"
