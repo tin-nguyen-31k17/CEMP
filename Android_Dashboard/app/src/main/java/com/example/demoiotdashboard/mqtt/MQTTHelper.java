@@ -17,7 +17,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class MQTTHelper {
 
-    public MqttAndroidClient mqttAndroidClient;
+    public final MqttAndroidClient mqttAndroidClient;
     public boolean connectFail = false;
 
     public final String[] arrayTopics = {"Fusioz/feeds/wms-feed.ph-sensor", "Fusioz/feeds/wms-feed.turbidity-sensor", "Fusioz/feeds/wms-feed.ammonia-sensor", "Fusioz/feeds/sensor4",
@@ -95,9 +95,9 @@ public class MQTTHelper {
     }
 
     private void subscribeToTopic() {
-        for(int i = 0; i < arrayTopics.length; i++) {
+        for (String arrayTopic : arrayTopics) {
             try {
-                mqttAndroidClient.subscribe(arrayTopics[i], 0, null, new IMqttActionListener() {
+                mqttAndroidClient.subscribe(arrayTopic, 0, null, new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
                         Log.d("TEST", "Subscribed!");

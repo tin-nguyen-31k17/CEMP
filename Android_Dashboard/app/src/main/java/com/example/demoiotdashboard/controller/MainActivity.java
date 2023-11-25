@@ -1,17 +1,15 @@
 package com.example.demoiotdashboard.controller;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.CompoundButton;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.example.demoiotdashboard.R;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
-import com.example.demoiotdashboard.alert.Alerts;
+import com.android.wateriotdashboard.R;
 import com.example.demoiotdashboard.mqtt.MQTTHelper;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -22,7 +20,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -35,11 +33,9 @@ public class MainActivity extends AppCompatActivity {
     SwitchCompat buttonPUMP;
     GraphView airHumidityGraph, airTemperatureGraph, soilTemperature;
 
-    Alerts alertDialog;
-
-    LineGraphSeries seriesAirTemperature = new LineGraphSeries<DataPoint>();
-    LineGraphSeries seriesAirHumidity = new LineGraphSeries<DataPoint>();
-    LineGraphSeries seriesSoilTemperature = new LineGraphSeries<DataPoint>();
+    final LineGraphSeries<DataPoint> seriesAirTemperature = new LineGraphSeries<>();
+    final LineGraphSeries<DataPoint> seriesAirHumidity = new LineGraphSeries<>();
+    final LineGraphSeries<DataPoint> seriesSoilTemperature = new LineGraphSeries<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,25 +73,26 @@ public class MainActivity extends AppCompatActivity {
         soilTemperature.getGridLabelRenderer().setHorizontalLabelsColor(Color.WHITE);
 
         buttonPUMP.setOnCheckedChangeListener(
-                new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton,
-                                                 boolean b) {
-                        if (b == true) {
-                            sendDataMQTT("Fusioz/feeds/wms-feed.relay-485", "ON");
-                        } else {
-                            sendDataMQTT("Fusioz/feeds/wms-feed.relay-485", "OFF");
-                        }
+                (compoundButton, b) -> {
+                    if (b) {
+                        sendDataMQTT("Fusioz/feeds/wms-feed.relay-485", "ON");
+                    } else {
+                        sendDataMQTT("Fusioz/feeds/wms-feed.relay-485", "OFF");
                     }
                 });
 
 
         startMQTT();
     }
-
     public Date convertLocalDateTime (LocalDateTime y){
-       Instant instant = y.toInstant(ZoneOffset.of("+07:00"));
-       Date out = Date.from(instant);
+        Instant instant = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            instant = y.toInstant(ZoneOffset.of("+07:00"));
+        }
+        Date out = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            out = Date.from(instant);
+        }
         return out;
     }
 
@@ -105,12 +102,12 @@ public class MainActivity extends AppCompatActivity {
         msg.setQos(0);
         msg.setRetained(false);
 
-        byte[] b = value.getBytes(Charset.forName("UTF-8"));
+        byte[] b = value.getBytes(StandardCharsets.UTF_8);
         msg.setPayload(b);
 
         try {
             mqttHelper.mqttAndroidClient.publish(topic, msg);
-        }catch (MqttException e){
+        }catch (MqttException ignored){
         }
     }
     public void startMQTT(){
@@ -126,40 +123,50 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
+            @SuppressLint("SetTextI18n")
             @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
+            public void messageArrived(String topic, MqttMessage message) {
                 Log.d("TEST",topic+ "***" +message.toString());
                 if (topic.contains("ph")){
                     double x = Double.parseDouble(message.toString());
-                    LocalDateTime time = LocalDateTime.now();
+                    LocalDateTime time = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        time = LocalDateTime.now();
+                    }
                     Date y = convertLocalDateTime(time);
                     seriesAirHumidity.appendData(new DataPoint(y,x), true, 15, true);
                     airHumidityGraph.addSeries(seriesAirHumidity);
                     airHumidityGraph.onDataChanged(true, true);
-                    txtAirHumidity.setText("pH Value: "  + message.toString() + " °Degree");
+                    txtAirHumidity.setText("pH Value: "  + message + " °Degree");
                 }
 
 
                 else if(topic.contains("turbidity")){
 
                     double x = Double.parseDouble(message.toString());
-                    LocalDateTime time = LocalDateTime.now();
+                    LocalDateTime time = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        time = LocalDateTime.now();
+                    }
                     Date y = convertLocalDateTime(time);
                     seriesAirTemperature.appendData(new DataPoint(y,x), true, 6, true);
                     airTemperatureGraph.addSeries(seriesAirTemperature);
                     airTemperatureGraph.onDataChanged(true, true);
-                    txtAirTemp.setText("Turbidity Value: " + message.toString() + " NTU" );
+                    txtAirTemp.setText("Turbidity Value: " + message + " NTU" );
                 }
 
                 else if(topic.contains("ammonia")){
 
                     double x = Double.parseDouble(message.toString());
-                    LocalDateTime time = LocalDateTime.now();
+                    LocalDateTime time = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        time = LocalDateTime.now();
+                    }
                     Date y = convertLocalDateTime(time);
                     seriesSoilTemperature.appendData(new DataPoint(y,x), true, 11, true);
                     soilTemperature.addSeries(seriesSoilTemperature);
                     soilTemperature.onDataChanged(true, true);
-                    txtSoilTemperature.setText("Ammonia Value: " + message.toString() + " mg/L" );
+                    txtSoilTemperature.setText("Ammonia Value: " + message + " mg/L" );
                 }
 
                 else if(topic.contains("AI")){
@@ -167,11 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 else if(topic.contains("wms-feed.relay-485")){
-                    if(message.toString().equals("ON")) {
-                        buttonPUMP.setChecked(true);
-                    }else{
-                        buttonPUMP.setChecked(false);
-                    }
+                    buttonPUMP.setChecked(message.toString().equals("ON"));
                 }
             }
             @Override

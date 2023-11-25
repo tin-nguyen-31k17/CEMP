@@ -1,16 +1,8 @@
 package com.example.demoiotdashboard.alert;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
-import android.os.Bundle;
 import android.view.View;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.demoiotdashboard.R;
-import com.example.demoiotdashboard.controller.MainActivity;
 
 public class Alerts {
 
@@ -22,11 +14,7 @@ public class Alerts {
 
         builder.setNeutralButton(
                 "Okay",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
+                (dialog, id) -> dialog.cancel());
 
         AlertDialog a = builder.create();
         a.show();
