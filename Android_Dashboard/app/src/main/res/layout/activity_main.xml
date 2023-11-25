@@ -95,20 +95,20 @@
             android:scaleType="centerCrop"
             android:src="@drawable/icon_ec"
             android:contentDescription="TODO" />
+
         <TextView
             android:id="@+id/txtEC"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="18dp"
             android:layout_marginEnd="7dp"
             android:layout_marginBottom="7dp"
             android:layout_toEndOf="@+id/ecLogo"
-            android:text="EC Sensor: Loading"
             android:gravity="center"
+            android:text="EC Sensor: Loading"
             android:textColor="@color/white"
-            android:textSize="20sp"
-            />
+            android:textSize="20sp" />
 
     </RelativeLayout>
 
@@ -133,20 +133,20 @@
             android:scaleType="centerCrop"
             android:src="@drawable/icon_ph"
             android:contentDescription="TODO" />
+
         <TextView
             android:id="@+id/txtPH"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="18dp"
             android:layout_marginEnd="7dp"
             android:layout_marginBottom="7dp"
             android:layout_toEndOf="@+id/phLogo"
-            android:text="PH Sensor: Loading"
             android:gravity="center"
+            android:text="PH Sensor: Loading"
             android:textColor="@color/white"
-            android:textSize="20sp"
-            />
+            android:textSize="20sp" />
 
     </RelativeLayout>
 
@@ -171,20 +171,20 @@
             android:scaleType="centerCrop"
             android:src="@drawable/icon_orp"
             android:contentDescription="TODO" />
+
         <TextView
             android:id="@+id/txtORP"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="18dp"
             android:layout_marginEnd="7dp"
             android:layout_marginBottom="7dp"
             android:layout_toEndOf="@+id/orpLogo"
-            android:text="ORP Sensor: Loading"
             android:gravity="center"
+            android:text="ORP Sensor: Loading"
             android:textColor="@color/white"
-            android:textSize="20sp"
-            />
+            android:textSize="20sp" />
 
     </RelativeLayout>
 
