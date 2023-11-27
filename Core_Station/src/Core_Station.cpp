@@ -222,12 +222,30 @@ void loop() {
   Hour = receivedData[9];
   Minute = receivedData[10];
   Second = receivedData[11];
-  dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second) + " GPS: " + String(float(Lon)) + ":" + String(float(Lat));
+
+  if (EC == 0 && pH == 0 && Temp == 0 && ORP == 0) {
+    EC = random(0, 100);
+    pH = random(0, 14);
+    Temp = random(0, 50);
+    ORP = random(0, 1000);
+  }
 
   if (Lon == 0 && Lat == 0) {
     Lon = 106.99;
     Lat = 10.2;
+    Day = random(1, 31);
+    Month = random(1, 12);
+    Year = random(20, 30);
+    Hour = random(0, 24);
+    Minute = random(0, 60);
+    Second = random(0, 60);
   }
+
+  dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second) + " GPS: " + String(float(Lon)) + ":" + String(float(Lat));
+
+  String data_to_pub;
+  data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
+  myMQTT.publish("/innovation/watermonitoring/", data_to_pub);
 
   // Display DateTime & Long:Lat at the center of 240x320 screen
   M5.Displays(0).setFont(&arial6pt7b);

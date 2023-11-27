@@ -3,11 +3,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        jcenter() // Warning: this repository is going to shut down soon
+
         maven{
-            url "https://repo.eclipse.org/content/repositories/paho-snapshots/"
+            url "https://repo.eclipse.org/content/repositories/paho-releases/"
         }
     }
 }
-rootProject.name = "Demo IoT Dashboard"
+rootProject.name = "Water Monitoring Dashboard"
 include ':app'
