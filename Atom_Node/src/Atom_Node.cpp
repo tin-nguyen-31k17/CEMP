@@ -8,7 +8,6 @@
 #include "sensor_data.h"
 #include "Atom_Node.h"
 
-// Function to check if the message failed to send and back it up
 void backupMessage(const uint8_t* data, size_t size) {
     if (backupIndex + size <= BACKUP_BUFFER_SIZE) {
         memcpy(backupBuffer + backupIndex, data, size);
@@ -20,7 +19,6 @@ void backupMessage(const uint8_t* data, size_t size) {
         memmove(backupBuffer, backupBuffer + bytesToDelete, backupIndex - bytesToDelete);
         backupIndex -= bytesToDelete;
 
-        // Add new data to the buffer
         memcpy(backupBuffer + backupIndex, data, size);
         backupIndex += size;
 
@@ -35,7 +33,6 @@ static void smartDelay(unsigned long ms) {
     } while (millis() - start < ms);
 }
 
-// Function to decode 32-bit sensor data
 float decode_32bit(uint8_t receivedData[9]) {
   int A = int(receivedData[5]);
   int B = int(receivedData[6]);
@@ -59,25 +56,21 @@ float decode_32bit(uint8_t receivedData[9]) {
   return pow(-1, sign_bit) * pow(2, exponent - 127) * mantissa;
 }
 
-// Function to read data from a sensor and store it in an array
 void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
  Serial2.write(sensorData, 8);
  delay(1000);
 
  if (Serial2.available()) {
    Serial2.readBytes(receivedData, sizeof(receivedData));
-   sensorReading = decode_32bit(receivedData); // Use the decode_32bit function to parse the sensor data
+   sensorReading = decode_32bit(receivedData);
  }
 }
 
-// Function to generate random sensor data
 void generateRandomSensorData(float& sensorReading) {
-  sensorReading = random(0, 100); // Random sensor reading for testing
+  sensorReading = random(0, 100);
 }
 
-// Function to generate random date-time, longitude, and latitude data
 void generateRandDateTimeGPS() {
-  // Generate random date-time
   Day = random(1, 31);
   Month = random(1, 13);
   Year = random(20, 30);
@@ -85,11 +78,9 @@ void generateRandDateTimeGPS() {
   Minute = random(0, 60);
   Second = random(0, 60);
 
-  // Generate random longitude and latitude
   Lon = random(0, 360);
   Lat = random(0, 180);
 
-  // Format the date and time as a string
   dateTime = String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second);
 }
 
@@ -117,7 +108,7 @@ void loop() {
   esp_now_peer_info_t gateway;
   memcpy(gateway.peer_addr, Gateway_Mac, 6);
   gateway.channel = WIFI_CHANNEL;
-  gateway.encrypt = false; // No encryption
+  gateway.encrypt = false;
   esp_now_add_peer(&gateway);
 
   const uint8_t *peer_addr = gateway.peer_addr;
@@ -169,7 +160,6 @@ void loop() {
 
   if (millis() > 5000 && gps.charsProcessed() < 10) Serial.println(F("No GPS data received: check wiring"));
 
-  // Copy sensor readings to dataToSend
   for (int i = 0; i < SENSOR_COUNT; i++) {
     dataToSend[i] = (uint8_t)sensorReadings[i];
   }
@@ -210,7 +200,7 @@ void loop() {
       if (result == ESP_OK) {
           Serial.println("Backup message sent successfully!");
           Serial.println();
-          backupIndex = 0; // Reset the backup buffer index after successful send
+          backupIndex = 0;
       } else {
           Serial.println("Backup message sending failed! Data will remain in the backup buffer.");
           Serial.println();

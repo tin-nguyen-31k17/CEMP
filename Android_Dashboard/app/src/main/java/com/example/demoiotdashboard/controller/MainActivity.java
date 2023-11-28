@@ -41,10 +41,10 @@ public class MainActivity extends AppCompatActivity {
         txtPH = findViewById(R.id.txtPH);
         txtORP = findViewById(R.id.txtORP);
         buttonPUMP = findViewById(R.id.buttonPUMP);
-        waterTempGraph = (GraphView) findViewById(R.id.graph1);
-        ecGraph = (GraphView) findViewById(R.id.graph2);
-        phGraph = (GraphView) findViewById(R.id.graph3);
-        orpGraph = (GraphView) findViewById(R.id.graph4);
+        waterTempGraph = findViewById(R.id.graph1);
+        ecGraph = findViewById(R.id.graph2);
+        phGraph = findViewById(R.id.graph3);
+        orpGraph = findViewById(R.id.graph4);
         startMQTT();
     }
     private void startMQTT() {
