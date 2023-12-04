@@ -1,4 +1,4 @@
-package com.example.flutter_iot_ben
+package com.bk.water.monitoring.dashboard
 
 import io.flutter.embedding.android.FlutterActivity
 

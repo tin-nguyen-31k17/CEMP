@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.flutter_iot_ben">
+    package="com.bk.water.monitoring.dashboard">
    <application
-        android:label="flutter_iot_ben"
+        android:label="Water Monitoring Dashboard"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
