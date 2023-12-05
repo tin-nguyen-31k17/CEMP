@@ -19,6 +19,21 @@ class Devices extends StatelessWidget {
       required this.onChanged,
       required this.isActive})
       : super(key: key);
+      // get correcsponding value from the device, for example: EC Sensor -> ec, pH Sensor -> ph, etc.
+      String get value { 
+        switch (name) {
+          case 'EC Sensor':
+            return '0.0';
+          case 'pH Sensor':
+            return '0.0';
+          case 'ORP Sensor':
+            return '0.0';
+          case 'Temp Sensor':
+            return '0.0';
+          default:
+            return '0.0';
+        }
+      }
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +91,14 @@ class Devices extends StatelessWidget {
                               color: isActive ? Colors.white : Colors.black,
                               fontWeight: FontWeight.w500),
                         ),
+                      ),
+                      Text(
+                        'Value: $value', // Replace 'value' with the actual value of the device
+                        style: TextStyle(
+                            height: 1.2,
+                            fontSize: 14,
+                            color: isActive ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),

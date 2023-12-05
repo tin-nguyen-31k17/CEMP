@@ -10,11 +10,11 @@ def flutterSdkPath = properties.getProperty("flutter.sdk")
 assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
 apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
 // Set proxy settings gti5hc:Theboringnerd!@rb-proxy-apac.bosch.com:80
-// System.properties['http.proxyHost'] = 'rb-proxy-apac.bosch.com'
-// System.properties['http.proxyPort'] = '80'
-// System.properties['https.proxyHost'] = 'rb-proxy-apac.bosch.com'
-// System.properties['https.proxyPort'] = '80'
-// System.properties['http.proxyUser'] = 'gti5hc'
-// System.properties['http.proxyPassword'] = 'Theboringnerd!'
-// System.properties['https.proxyUser'] = 'gti5hc'
-// System.properties['https.proxyPassword'] = 'Theboringnerd!'
+System.properties['http.proxyHost'] = 'rb-proxy-apac.bosch.com'
+System.properties['http.proxyPort'] = '80'
+System.properties['https.proxyHost'] = 'rb-proxy-apac.bosch.com'
+System.properties['https.proxyPort'] = '80'
+System.properties['http.proxyUser'] = 'gti5hc'
+System.properties['http.proxyPassword'] = 'Theboringnerd!'
+System.properties['https.proxyUser'] = 'gti5hc'
+System.properties['https.proxyPassword'] = 'Theboringnerd!'

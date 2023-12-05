@@ -14,21 +14,24 @@ class MQTTManager {
   late MqttServerClient _client;
   Function(Map<String, dynamic>)? onMessageReceived;
 
-  // Constructor initializes _client
-  MQTTManager() {
+  MQTTManager({this.onMessageReceived}) {
     _client = MqttServerClient.withPort(serverUri, clientId, port);
-    // Other initialization code can go here
   }
+  
+  List<DeviceModel>? get devices => null;
 
-  // Initialize the MQTT client
   Future<void> initializeMQTTClient() async {
     _client.logging(on: true);
     _client.keepAlivePeriod = 20;
     _client.onDisconnected = _onDisconnected;
     _client.onConnected = _onConnected;
     _client.onSubscribed = _onSubscribed;
+    _client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> c) {
+      final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
+      final String message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
 
-    // Use null-aware operator to check if updates is null
+      _handleIncomingMessage(message, devices!);
+    });
     _client.updates?.listen(_onMessage);
 
     final connMessage = MqttConnectMessage()
@@ -42,7 +45,6 @@ class MQTTManager {
     _client.connectionMessage = connMessage;
   }
 
-  // Connect to the MQTT broker
   Future<void> connect() async {
     try {
       await _client.connect();
@@ -52,30 +54,25 @@ class MQTTManager {
     }
   }
 
-  // Handle successful connection
   void _onConnected() {
     print('Connected to MQTT broker');
     _subscribeToTopic();
   }
 
-  // Handle disconnection
   void _onDisconnected() {
     print('Disconnected from MQTT broker');
   }
 
-  // Handle subscription
   void _onSubscribed(String topic) {
     print('Subscribed to topic: $topic');
   }
 
-  // Subscribe to a topic
   void _subscribeToTopic() {
     for (String topic in topics) {
       _client.subscribe(topic, MqttQos.atLeastOnce);
     }
   }
 
-  // Handle incoming messages
   void _onMessage(List<MqttReceivedMessage<MqttMessage>> c) {
     final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
     final String message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
@@ -83,28 +80,24 @@ class MQTTManager {
     Map<String, dynamic> messageJson;
     try {
       messageJson = json.decode(message);
+      print('MQTT message: $message');
     } catch (e) {
       print('Error decoding incoming message: $e');
       return;
     }
-
     if (onMessageReceived != null) {
       onMessageReceived!(messageJson);
     }
   }
 
-  // This method now accepts a list of DeviceModel and handles the parsing of sensor data
   void _handleIncomingMessage(String message, List<DeviceModel> devices) {
     try {
       final Map<String, dynamic> data = json.decode(message);
-
-      // Parse the station and GPS data
       final String stationId = data['station_id'];
       final String stationName = data['station_name'];
       final double gpsLongitude = double.parse(data['gps_longitude']);
       final double gpsLatitude = double.parse(data['gps_latitude']);
 
-      // Parse the sensor data
       final List<dynamic> sensors = data['sensors'];
       for (var sensorData in sensors) {
         final String sensorId = sensorData['sensor_id'];
@@ -112,7 +105,6 @@ class MQTTManager {
         final double sensorValue = double.parse(sensorData['sensor_value']);
         final String sensorUnit = sensorData['sensor_unit'];
 
-        // Update the corresponding device model with the new sensor value
         for (var device in devices) {
           if (device.name == sensorName) {
             switch (sensorId) {
@@ -139,7 +131,6 @@ class MQTTManager {
     }
   }
 
-  // Disconnect from the MQTT broker
   void disconnect() {
     _client.disconnect();
   }

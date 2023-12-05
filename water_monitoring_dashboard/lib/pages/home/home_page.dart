@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/pages/home/widgets/devices.dart';
-import 'package:water_monitoring_dashboard/repository/devices.dart';
-import 'package:water_monitoring_dashboard/utils/string_to_color.dart';
+import 'package:water_monitoring_dashboard/utils/mqtt_manager.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -11,6 +11,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<DeviceModel> devices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    var mqttManager = MQTTManager(onMessageReceived: _updateDevices);
+    mqttManager.initializeMQTTClient();
+    mqttManager.connect();
+    mqttManager.onMessageReceived = _updateDevices;
+
+    devices = [
+      DeviceModel(name: 'EC Sensor', color: Colors.blue, isActive: false, icon: 'assets/svg/IconEC.svg', value: 0.0),
+      DeviceModel(name: 'pH Sensor', color: Colors.green, isActive: false, icon: 'assets/svg/IconpH.svg', value: 0.0),
+      DeviceModel(name: 'ORP Sensor', color: Colors.red, isActive: false, icon: 'assets/svg/IconORP.svg', value: 0.0),
+      DeviceModel(name: 'Temp Sensor', color: Colors.yellow, isActive: false, icon: 'assets/svg/IconTemp.svg', value: 0.0),
+    ];
+  }
+
+  void _updateDevices(Map<String, dynamic> messageJson) {
+    setState(() {
+      for (var device in devices) {
+        for (var sensor in messageJson['sensors']) {
+          if (device.name == sensor['sensor_name']) {
+            switch (sensor['sensor_id']) {
+              case 'ec_0001':
+                device.ec = double.parse(sensor['sensor_value']);
+                device.value = device.ec;
+                break;
+              case 'ph_0001':
+                device.ph = double.parse(sensor['sensor_value']);
+                device.value = device.ph;
+                break;
+              case 'ORP_0001':
+                device.orp = double.parse(sensor['sensor_value']);
+                device.value = device.orp;
+                break;
+              case 'TEMP_0001':
+                device.temp = double.parse(sensor['sensor_value']);
+                device.value = device.temp;
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,12 +77,12 @@ class _HomePageState extends State<HomePage> {
           child: SafeArea(
             child: Column(
               children: [
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: const [
+                  children: [
                     Text(
-                      "Hi,Ben",
+                      "Hi, Tin Nguyen",
                       style: TextStyle(
                           fontSize: 28,
                           color: Colors.black,
@@ -69,9 +118,9 @@ class _HomePageState extends State<HomePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
+                              const Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
+                                children: [
                                   Text(
                                     "5 devices added",
                                     style: TextStyle(
@@ -114,7 +163,7 @@ class _HomePageState extends State<HomePage> {
                                   return Devices(
                                     name: devices[index].name,
                                     svg: devices[index].icon,
-                                    color: devices[index].color.toColor(),
+                                    color: devices[index].color,
                                     isActive: devices[index].isActive,
                                     onChanged: (val) {
                                       setState(() {

@@ -1,50 +1,68 @@
+import 'package:flutter/material.dart';
+
 class DeviceModel {
   String name;
-  String color;
+  Color color;
   bool isActive;
   String icon;
-  double ec; // Electrical Conductivity
-  double ph; // pH level
-  double temp; // Temperature
-  double orp; // Oxidation-Reduction Potential
+  double? value;
+  double? ec;
+  double? ph;
+  double? temp;
+  double? orp;
+  double? gps;
 
   DeviceModel({
     required this.name,
     required this.color,
     required this.isActive,
     required this.icon,
-    required this.ec,
-    required this.ph,
-    required this.temp,
-    required this.orp,
+    required this.value,
+    this.ec,
+    this.ph,
+    this.temp,
+    this.orp,
+    this.gps,
   });
 
-  // Add a factory constructor to create DeviceModel from JSON
+  // Helper function to parse hex color
+  static Color _parseHexColor(String hexColor) {
+    hexColor = hexColor.toUpperCase().replaceAll("#", "");
+    if (hexColor.length == 6) {
+      hexColor = "FF$hexColor";
+    }
+    return Color(int.parse(hexColor, radix: 16));
+  }
+
+  // Factory constructor to create DeviceModel from JSON
   factory DeviceModel.fromJson(Map<String, dynamic> json) {
     return DeviceModel(
       name: json['name'] ?? 'default_name',
-      color: json['color'] ?? 'default_color',
+      color: _parseHexColor(json['color'] ?? '#FFFFFF'), // Use helper function
       isActive: json['isActive'] ?? false,
       icon: json['icon'] ?? 'default_icon',
-      ec: json['ec']?.toDouble() ?? 0.0,
-      ph: json['ph']?.toDouble() ?? 0.0,
-      temp: json['temp']?.toDouble() ?? 0.0,
-      orp: json['orp']?.toDouble() ?? 0.0,
+      value: json['value']?.toDouble(),
+      ec: json['ec']?.toDouble(),
+      ph: json['ph']?.toDouble(),
+      temp: json['temp']?.toDouble(),
+      orp: json['orp']?.toDouble(),
+      gps: json['gps']?.toDouble(),
     );
   }
 
-  // Add a toJson method to convert DeviceModel to JSON
+  // Convert DeviceModel to JSON
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {
+    return {
       'name': name,
-      'color': color,
+      'color': color.value.toRadixString(16), // Convert Color to hex string
       'isActive': isActive,
       'icon': icon,
+      'value': value,
       'ec': ec,
       'ph': ph,
       'temp': temp,
       'orp': orp,
+      'gps': gps,
     };
-    return data;
   }
 }
