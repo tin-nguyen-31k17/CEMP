@@ -29,7 +29,7 @@ class Devices extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<DeviceListModel>(
-      builder: (context, deviceListModel, child) {
+        builder: (context, deviceListModel, child) {
       return OpenContainer(
           transitionType: ContainerTransitionType.fadeThrough,
           transitionDuration: const Duration(milliseconds: 600),
@@ -40,8 +40,7 @@ class Devices extends StatelessWidget {
           closedShape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20.0))),
           openBuilder: (BuildContext context, VoidCallback _) {
-            return ControlPanelPage(
-                tag: name, color: color);
+            return ControlPanelPage(tag: name, color: color);
           },
           tappable: true,
           closedBuilder: (BuildContext _, VoidCallback openContainer) {
@@ -69,7 +68,7 @@ class Devices extends StatelessWidget {
                         SvgPicture.asset(
                           svg,
                           color: isActive ? Colors.white : Colors.black,
-                          height: 30,
+                          height: 46.5,
                         ),
                         const SizedBox(
                           height: 14,
@@ -86,7 +85,8 @@ class Devices extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Value: ${id < deviceListModel.devices.length ? deviceListModel.devices[id].value : 'N/A'}',
+                          // 'Value: ${id < deviceListModel.devices.length ? deviceListModel.devices[id].value : 'N/A'}',
+                          'Value: $value',
                           style: TextStyle(
                               height: 1.2,
                               fontSize: 14,
@@ -113,7 +113,6 @@ class Devices extends StatelessWidget {
               ),
             );
           });
-      }
-    );
+    });
   }
 }

@@ -23,13 +23,9 @@ class MQTTManager {
     _client.onDisconnected = _onDisconnected;
     _client.onConnected = _onConnected;
     _client.onSubscribed = _onSubscribed;
-    _client.updates?.listen(_onMessage);
 
     final connMessage = MqttConnectMessage()
         .authenticateAs(username, password)
-        .keepAliveFor(60)
-        .withWillTopic('willtopic')
-        .withWillMessage('My Will message')
         .startClean()
         .withWillQos(MqttQos.atLeastOnce);
 
@@ -59,25 +55,19 @@ class MQTTManager {
   }
 
   void _subscribeToTopic() {
-    _client.subscribe(topics[0], MqttQos.atMostOnce);
+    _client.subscribe(topics[0], MqttQos.atLeastOnce);
     _client.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
       final recMess = c[0].payload as MqttPublishMessage;
-      String message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      String message =
+          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
       String decodeMessage = const Utf8Decoder().convert(message.codeUnits);
       print("MQTTClientWrapper:: Decoded message: $decodeMessage");
+      Map<String, dynamic> messageJson = jsonDecode(decodeMessage);
+      onMessageReceived!(messageJson);
     });
   }
 
-  void _onMessage(List<MqttReceivedMessage<MqttMessage>> c) {
-    final recMess = c[0].payload as MqttPublishMessage;
-    String message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-    String decodeMessage = const Utf8Decoder().convert(message.codeUnits);
-    print("MQTTClientWrapper:: Decoded message: $decodeMessage");
-    Map<String, dynamic> messageJson = jsonDecode(decodeMessage);
-    onMessageReceived!(messageJson);
-  }
   void disconnect() {
-    _client.unsubscribe(topics[0]);
     _client.disconnect();
   }
 }

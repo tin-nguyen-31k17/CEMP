@@ -22,10 +22,34 @@ class _HomePageState extends State<HomePage> {
     mqttManager.initializeMQTTClient().then((value) => mqttManager.connect());
 
     devices = [
-      DeviceModel(name: 'EC Sensor', color: Colors.blue, isActive: false, icon: 'assets/svg/IconEC.svg', value: 0.0, id: 0),
-      DeviceModel(name: 'pH Sensor', color: Colors.green, isActive: false, icon: 'assets/svg/IconpH.svg', value: 0.0, id: 1),
-      DeviceModel(name: 'ORP Sensor', color: Colors.grey, isActive: false, icon: 'assets/svg/IconORP.svg', value: 0.0, id: 2),
-      DeviceModel(name: 'Temp Sensor', color: Colors.red, isActive: false, icon: 'assets/svg/IconTemp.svg', value: 0.0, id: 3),
+      DeviceModel(
+          name: 'EC 0001',
+          color: Colors.blue,
+          isActive: false,
+          icon: 'assets/svg/IconEC.svg',
+          value: 0.0,
+          id: 0),
+      DeviceModel(
+          name: 'PH 0001',
+          color: Colors.green,
+          isActive: false,
+          icon: 'assets/svg/IconPH.svg',
+          value: 0.0,
+          id: 1),
+      DeviceModel(
+          name: 'ORP 0001',
+          color: Colors.grey,
+          isActive: false,
+          icon: 'assets/svg/IconORP.svg',
+          value: 0.0,
+          id: 2),
+      DeviceModel(
+          name: 'Nhiệt Độ',
+          color: Colors.red,
+          isActive: false,
+          icon: 'assets/svg/IconTemp.svg',
+          value: 0.0,
+          id: 3),
     ];
 
     Future.delayed(Duration.zero, () {
@@ -39,21 +63,21 @@ class _HomePageState extends State<HomePage> {
         for (var sensor in messageJson['sensors']) {
           var device = devices.firstWhere(
             (d) => d.name == sensor['sensor_name'],
-            orElse: () => DeviceModel(
-              name: 'Default Sensor',
-              color: Colors.grey,
-              isActive: false,
-              icon: 'default_icon',
-              value: 0.0,
-              id: 0,
-            ),
+            orElse: () {
+              print('Device not found for sensor: ${sensor['sensor_name']}');
+              return DeviceModel(
+                name: 'Default Sensor',
+                color: Colors.grey,
+                isActive: false,
+                icon: 'default_icon',
+                value: 0.0,
+                id: 0,
+              );
+            },
           );
-          if (device != null) {
-            device.value = double.parse(sensor['sensor_value']);
-            device.isActive = true; 
-            print("Updated device: ${device.name}, Value: ${device.value}");
-            Provider.of<DeviceListModel>(context, listen: false).notifyListeners();
-          }
+          device.value = double.parse(sensor['sensor_value']);
+          device.isActive = true;
+          print("Updated device: ${device.name}, Value: ${device.value}");
         }
       });
     } else {
