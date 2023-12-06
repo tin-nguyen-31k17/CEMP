@@ -16,48 +16,45 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    var mqttManager = MQTTManager(onMessageReceived: _updateDevices);
-    mqttManager.initializeMQTTClient();
-    mqttManager.connect();
-    mqttManager.onMessageReceived = _updateDevices;
+    // initialize MQTT
+    final mqttManager = MQTTManager(onMessageReceived: _updateDevices);
+    mqttManager.initializeMQTTClient().then((value) => mqttManager.connect());
 
     devices = [
       DeviceModel(name: 'EC Sensor', color: Colors.blue, isActive: false, icon: 'assets/svg/IconEC.svg', value: 0.0),
       DeviceModel(name: 'pH Sensor', color: Colors.green, isActive: false, icon: 'assets/svg/IconpH.svg', value: 0.0),
-      DeviceModel(name: 'ORP Sensor', color: Colors.red, isActive: false, icon: 'assets/svg/IconORP.svg', value: 0.0),
-      DeviceModel(name: 'Temp Sensor', color: Colors.yellow, isActive: false, icon: 'assets/svg/IconTemp.svg', value: 0.0),
+      DeviceModel(name: 'ORP Sensor', color: Colors.grey, isActive: false, icon: 'assets/svg/IconORP.svg', value: 0.0),
+      DeviceModel(name: 'Temp Sensor', color: Colors.red, isActive: false, icon: 'assets/svg/IconTemp.svg', value: 0.0),
     ];
   }
 
   void _updateDevices(Map<String, dynamic> messageJson) {
-    setState(() {
-      for (var device in devices) {
+    print("########## Checkpoint 1 ##########");
+    print(messageJson);
+
+    if (messageJson.containsKey('sensors') && messageJson['sensors'] is List) {
+      setState(() {
         for (var sensor in messageJson['sensors']) {
-          if (device.name == sensor['sensor_name']) {
-            switch (sensor['sensor_id']) {
-              case 'ec_0001':
-                device.ec = double.parse(sensor['sensor_value']);
-                device.value = device.ec;
-                break;
-              case 'ph_0001':
-                device.ph = double.parse(sensor['sensor_value']);
-                device.value = device.ph;
-                break;
-              case 'ORP_0001':
-                device.orp = double.parse(sensor['sensor_value']);
-                device.value = device.orp;
-                break;
-              case 'TEMP_0001':
-                device.temp = double.parse(sensor['sensor_value']);
-                device.value = device.temp;
-                break;
-              default:
-                break;
-            }
+          var device = devices.firstWhere(
+            (d) => d.name == sensor['sensor_name'],
+            orElse: () => DeviceModel(
+              name: 'Default Sensor',
+              color: Colors.grey,
+              isActive: false,
+              icon: 'default_icon',
+              value: 0.0,
+            ),
+          );
+          if (device != null) {
+            device.value = double.parse(sensor['sensor_value']);
+            device.isActive = true; 
+            print("Updated device: ${device.name}, Value: ${device.value}");
           }
         }
-      }
-    });
+      });
+    } else {
+      print("The 'sensors' key is missing or not a list.");
+    }
   }
 
   @override
@@ -165,6 +162,7 @@ class _HomePageState extends State<HomePage> {
                                     svg: devices[index].icon,
                                     color: devices[index].color,
                                     isActive: devices[index].isActive,
+                                    value: devices[index].value ?? 0.1,
                                     onChanged: (val) {
                                       setState(() {
                                         devices[index].isActive =

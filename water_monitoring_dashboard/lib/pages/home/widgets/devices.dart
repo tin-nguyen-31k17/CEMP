@@ -10,6 +10,7 @@ class Devices extends StatelessWidget {
   final Color color;
   final bool isActive;
   final Function(bool) onChanged;
+  final double value;
 
   const Devices(
       {Key? key,
@@ -17,23 +18,9 @@ class Devices extends StatelessWidget {
       required this.svg,
       required this.color,
       required this.onChanged,
+      required this.value,
       required this.isActive})
       : super(key: key);
-      // get correcsponding value from the device, for example: EC Sensor -> ec, pH Sensor -> ph, etc.
-      String get value { 
-        switch (name) {
-          case 'EC Sensor':
-            return '0.0';
-          case 'pH Sensor':
-            return '0.0';
-          case 'ORP Sensor':
-            return '0.0';
-          case 'Temp Sensor':
-            return '0.0';
-          default:
-            return '0.0';
-        }
-      }
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +80,7 @@ class Devices extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Value: $value', // Replace 'value' with the actual value of the device
+                        'Value: $value',
                         style: TextStyle(
                             height: 1.2,
                             fontSize: 14,
