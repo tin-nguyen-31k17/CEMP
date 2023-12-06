@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/pages/home/widgets/devices.dart';
 import 'package:water_monitoring_dashboard/utils/mqtt_manager.dart';
+import 'package:water_monitoring_dashboard/model/device_list_model.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -16,22 +18,22 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // initialize MQTT
     final mqttManager = MQTTManager(onMessageReceived: _updateDevices);
     mqttManager.initializeMQTTClient().then((value) => mqttManager.connect());
 
     devices = [
-      DeviceModel(name: 'EC Sensor', color: Colors.blue, isActive: false, icon: 'assets/svg/IconEC.svg', value: 0.0),
-      DeviceModel(name: 'pH Sensor', color: Colors.green, isActive: false, icon: 'assets/svg/IconpH.svg', value: 0.0),
-      DeviceModel(name: 'ORP Sensor', color: Colors.grey, isActive: false, icon: 'assets/svg/IconORP.svg', value: 0.0),
-      DeviceModel(name: 'Temp Sensor', color: Colors.red, isActive: false, icon: 'assets/svg/IconTemp.svg', value: 0.0),
+      DeviceModel(name: 'EC Sensor', color: Colors.blue, isActive: false, icon: 'assets/svg/IconEC.svg', value: 0.0, id: 0),
+      DeviceModel(name: 'pH Sensor', color: Colors.green, isActive: false, icon: 'assets/svg/IconpH.svg', value: 0.0, id: 1),
+      DeviceModel(name: 'ORP Sensor', color: Colors.grey, isActive: false, icon: 'assets/svg/IconORP.svg', value: 0.0, id: 2),
+      DeviceModel(name: 'Temp Sensor', color: Colors.red, isActive: false, icon: 'assets/svg/IconTemp.svg', value: 0.0, id: 3),
     ];
+
+    Future.delayed(Duration.zero, () {
+      Provider.of<DeviceListModel>(context, listen: false).devices = devices;
+    });
   }
 
   void _updateDevices(Map<String, dynamic> messageJson) {
-    print("########## Checkpoint 1 ##########");
-    print(messageJson);
-
     if (messageJson.containsKey('sensors') && messageJson['sensors'] is List) {
       setState(() {
         for (var sensor in messageJson['sensors']) {
@@ -43,12 +45,14 @@ class _HomePageState extends State<HomePage> {
               isActive: false,
               icon: 'default_icon',
               value: 0.0,
+              id: 0,
             ),
           );
           if (device != null) {
             device.value = double.parse(sensor['sensor_value']);
             device.isActive = true; 
             print("Updated device: ${device.name}, Value: ${device.value}");
+            Provider.of<DeviceListModel>(context, listen: false).notifyListeners();
           }
         }
       });
@@ -163,6 +167,7 @@ class _HomePageState extends State<HomePage> {
                                     color: devices[index].color,
                                     isActive: devices[index].isActive,
                                     value: devices[index].value ?? 0.1,
+                                    id: devices[index].id ?? 0,
                                     onChanged: (val) {
                                       setState(() {
                                         devices[index].isActive =

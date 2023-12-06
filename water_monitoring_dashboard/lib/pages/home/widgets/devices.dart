@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:water_monitoring_dashboard/pages/control_view/control_panel_page.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
+import 'package:water_monitoring_dashboard/model/device_list_model.dart';
 
 class Devices extends StatelessWidget {
   final String name;
@@ -11,6 +13,7 @@ class Devices extends StatelessWidget {
   final bool isActive;
   final Function(bool) onChanged;
   final double value;
+  final int id;
 
   const Devices(
       {Key? key,
@@ -19,93 +22,98 @@ class Devices extends StatelessWidget {
       required this.color,
       required this.onChanged,
       required this.value,
-      required this.isActive})
+      required this.isActive,
+      required this.id})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return OpenContainer(
-        transitionType: ContainerTransitionType.fadeThrough,
-        transitionDuration: const Duration(milliseconds: 600),
-        closedElevation: 0,
-        openElevation: 0,
-        openShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(20.0))),
-        closedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(20.0))),
-        openBuilder: (BuildContext context, VoidCallback _) {
-          return ControlPanelPage(
-              tag: name, color: color);
-        },
-        tappable: true,
-        closedBuilder: (BuildContext _, VoidCallback openContainer) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(
-                Radius.circular(20.0),
+    return Consumer<DeviceListModel>(
+      builder: (context, deviceListModel, child) {
+      return OpenContainer(
+          transitionType: ContainerTransitionType.fadeThrough,
+          transitionDuration: const Duration(milliseconds: 600),
+          closedElevation: 0,
+          openElevation: 0,
+          openShape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))),
+          closedShape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))),
+          openBuilder: (BuildContext context, VoidCallback _) {
+            return ControlPanelPage(
+                tag: name, color: color);
+          },
+          tappable: true,
+          closedBuilder: (BuildContext _, VoidCallback openContainer) {
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(20.0),
+                ),
+                border: Border.all(
+                  color: Colors.grey[300]!,
+                  width: 0.6,
+                ),
+                color: isActive ? color : Colors.white,
               ),
-              border: Border.all(
-                color: Colors.grey[300]!,
-                width: 0.6,
-              ),
-              color: isActive ? color : Colors.white,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(14.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SvgPicture.asset(
-                        svg,
-                        color: isActive ? Colors.white : Colors.black,
-                        height: 30,
-                      ),
-                      const SizedBox(
-                        height: 14,
-                      ),
-                      SizedBox(
-                        width: 65,
-                        child: Text(
-                          name,
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SvgPicture.asset(
+                          svg,
+                          color: isActive ? Colors.white : Colors.black,
+                          height: 30,
+                        ),
+                        const SizedBox(
+                          height: 14,
+                        ),
+                        SizedBox(
+                          width: 65,
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                                height: 1.2,
+                                fontSize: 14,
+                                color: isActive ? Colors.white : Colors.black,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        Text(
+                          'Value: ${id < deviceListModel.devices.length ? deviceListModel.devices[id].value : 'N/A'}',
                           style: TextStyle(
                               height: 1.2,
                               fontSize: 14,
                               color: isActive ? Colors.white : Colors.black,
                               fontWeight: FontWeight.w500),
                         ),
-                      ),
-                      Text(
-                        'Value: $value',
-                        style: TextStyle(
-                            height: 1.2,
-                            fontSize: 14,
-                            color: isActive ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                  Transform.scale(
-                    alignment: Alignment.center,
-                    scaleY: 0.8,
-                    scaleX: 0.85,
-                    child: CupertinoSwitch(
-                      onChanged: onChanged,
-                      value: isActive,
-                      activeColor: isActive
-                          ? Colors.white.withOpacity(0.4)
-                          : Colors.black,
-                      trackColor: Colors.black,
+                      ],
                     ),
-                  ),
-                ],
+                    Transform.scale(
+                      alignment: Alignment.center,
+                      scaleY: 0.8,
+                      scaleX: 0.85,
+                      child: CupertinoSwitch(
+                        onChanged: onChanged,
+                        value: isActive,
+                        activeColor: isActive
+                            ? Colors.white.withOpacity(0.4)
+                            : Colors.black,
+                        trackColor: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        });
+            );
+          });
+      }
+    );
   }
 }
