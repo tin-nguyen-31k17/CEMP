@@ -13,7 +13,8 @@ class Devices extends StatelessWidget {
   final bool isActive;
   final Function(bool) onChanged;
   final double value;
-  final int id;
+  final String id;
+  final String unit;
 
   const Devices(
       {Key? key,
@@ -23,6 +24,7 @@ class Devices extends StatelessWidget {
       required this.onChanged,
       required this.value,
       required this.isActive,
+      required this.unit,
       required this.id})
       : super(key: key);
 
@@ -52,7 +54,7 @@ class Devices extends StatelessWidget {
                 ),
                 border: Border.all(
                   color: Colors.grey[300]!,
-                  width: 0.6,
+                  width: 1.0,
                 ),
                 color: isActive ? color : Colors.white,
               ),
@@ -68,7 +70,7 @@ class Devices extends StatelessWidget {
                         SvgPicture.asset(
                           svg,
                           color: isActive ? Colors.white : Colors.black,
-                          height: 46.5,
+                          height: 38,
                         ),
                         const SizedBox(
                           height: 14,
@@ -76,22 +78,13 @@ class Devices extends StatelessWidget {
                         SizedBox(
                           width: 65,
                           child: Text(
-                            name,
+                            '$name: ${value.toStringAsFixed(1)} $unit',
                             style: TextStyle(
                                 height: 1.2,
                                 fontSize: 14,
                                 color: isActive ? Colors.white : Colors.black,
                                 fontWeight: FontWeight.w500),
                           ),
-                        ),
-                        Text(
-                          // 'Value: ${id < deviceListModel.devices.length ? deviceListModel.devices[id].value : 'N/A'}',
-                          'Value: $value',
-                          style: TextStyle(
-                              height: 1.2,
-                              fontSize: 14,
-                              color: isActive ? Colors.white : Colors.black,
-                              fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),

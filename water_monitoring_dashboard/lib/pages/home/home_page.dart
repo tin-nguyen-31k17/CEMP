@@ -23,33 +23,37 @@ class _HomePageState extends State<HomePage> {
 
     devices = [
       DeviceModel(
-          name: 'EC 0001',
+          name: 'EC Sensor',
           color: Colors.blue,
           isActive: false,
           icon: 'assets/svg/IconEC.svg',
           value: 0.0,
-          id: 0),
+          id: 'ec_0001',
+          unit: 'mS/cm'),
       DeviceModel(
-          name: 'PH 0001',
+          name: 'pH Sensor',
           color: Colors.green,
           isActive: false,
-          icon: 'assets/svg/IconPH.svg',
+          icon: 'assets/svg/IconpH.svg',
           value: 0.0,
-          id: 1),
+          id: 'ph_0001',
+          unit: 'pH'),
       DeviceModel(
-          name: 'ORP 0001',
+          name: 'ORP Sensor',
           color: Colors.grey,
           isActive: false,
           icon: 'assets/svg/IconORP.svg',
           value: 0.0,
-          id: 2),
+          id: 'ORP_0001',
+          unit: 'mV'),
       DeviceModel(
-          name: 'Nhiệt Độ',
+          name: 'Temp Sensor',
           color: Colors.red,
           isActive: false,
           icon: 'assets/svg/IconTemp.svg',
           value: 0.0,
-          id: 3),
+          id: 'TEMP_0001',
+          unit: '°C'),
     ];
 
     Future.delayed(Duration.zero, () {
@@ -62,16 +66,17 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         for (var sensor in messageJson['sensors']) {
           var device = devices.firstWhere(
-            (d) => d.name == sensor['sensor_name'],
+            (d) => d.id == sensor['sensor_id'],
             orElse: () {
-              print('Device not found for sensor: ${sensor['sensor_name']}');
+              print('Device not found for sensor: ${sensor['sensor_id']}');
               return DeviceModel(
                 name: 'Default Sensor',
                 color: Colors.grey,
                 isActive: false,
                 icon: 'default_icon',
                 value: 0.0,
-                id: 0,
+                id: 'default_id',
+                unit: 'default_unit',
               );
             },
           );
@@ -189,9 +194,10 @@ class _HomePageState extends State<HomePage> {
                                     name: devices[index].name,
                                     svg: devices[index].icon,
                                     color: devices[index].color,
+                                    value: devices[index].value ?? 0.0,
                                     isActive: devices[index].isActive,
-                                    value: devices[index].value ?? 0.1,
-                                    id: devices[index].id ?? 0,
+                                    id: devices[index].id,
+                                    unit: devices[index].unit,
                                     onChanged: (val) {
                                       setState(() {
                                         devices[index].isActive =
