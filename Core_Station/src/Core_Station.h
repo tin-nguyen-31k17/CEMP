@@ -53,6 +53,9 @@ uint16_t brightness      = BRIGHTNESS;
 uint16_t batteryLevelOld = 1024;
 boolean batteryCharginglOld = true;
 float temperatureOffset;
+#define SD_CS 4
+#define SPI_MODE_LCD { pinMode(TFT_DC, OUTPUT); digitalWrite(TFT_DC, HIGH); }
+#define SPI_MODE_SDCARD { pinMode(TFT_DC, INPUT); }
 
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
 uint8_t receivedData[SENSOR_COUNT] = {0};

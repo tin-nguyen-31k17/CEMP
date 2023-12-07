@@ -9,15 +9,21 @@ import 'package:water_monitoring_dashboard/pages/control_view/widgets/temp_widge
 import 'package:water_monitoring_dashboard/utils/slider_utils.dart';
 import 'package:water_monitoring_dashboard/widgets/custom_appbar.dart';
 import 'package:rainbow_color/rainbow_color.dart';
+import 'package:provider/provider.dart';
+import 'package:water_monitoring_dashboard/model/device_list_model.dart';
+import 'package:water_monitoring_dashboard/model/device_model.dart';
 
 class ControlPanelPage extends StatefulWidget {
   final String tag;
   final Color color;
+  final int selectedDeviceIndex;
 
-  const ControlPanelPage({
-    Key? key,
-    required this.tag,
-    required this.color}) : super(key: key);
+  const ControlPanelPage(
+      {Key? key,
+      required this.tag,
+      required this.color,
+      required this.selectedDeviceIndex})
+      : super(key: key);
   @override
   _ControlPanelPageState createState() => _ControlPanelPageState();
 }
@@ -27,8 +33,9 @@ class _ControlPanelPageState extends State<ControlPanelPage>
   Options option = Options.cooling;
   bool isActive = false;
   int speed = 1;
-  double temp = 22.85;
+  double value = 0.0;
   double progressVal = 0.49;
+  List<DeviceModel> devices = [];
 
   var activeColor = Rainbow(spectrum: [
     const Color(0xFF33C0BA),
@@ -41,6 +48,8 @@ class _ControlPanelPageState extends State<ControlPanelPage>
   @override
   void initState() {
     super.initState();
+    devices = Provider.of<DeviceListModel>(context, listen: false).devices;
+    value = devices[widget.selectedDeviceIndex].value ?? 0.0;
   }
 
   @override
@@ -50,7 +59,11 @@ class _ControlPanelPageState extends State<ControlPanelPage>
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Consumer<DeviceListModel>(
+      builder: (context, deviceList, child) {
+        // Update the value when the device value changes
+        value = devices[widget.selectedDeviceIndex].value ?? 0.0;
+        return Scaffold(
           body: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
@@ -83,7 +96,7 @@ class _ControlPanelPageState extends State<ControlPanelPage>
                   padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
                   child: Column(
                     children: [
-                     CustomAppBar(title: widget.tag),
+                      CustomAppBar(title: widget.tag),
                       const SizedBox(
                         height: 20,
                       ),
@@ -103,7 +116,8 @@ class _ControlPanelPageState extends State<ControlPanelPage>
               ),
             ),
           ),
-        
+        );
+      },
     );
   }
 
@@ -151,9 +165,10 @@ class _ControlPanelPageState extends State<ControlPanelPage>
     return SliderWidget(
       progressVal: progressVal,
       color: activeColor[progressVal],
+      device: devices[widget.selectedDeviceIndex],
       onChange: (value) {
         setState(() {
-          temp = value;
+          value = devices[widget.selectedDeviceIndex].value ?? 0.0;
           progressVal = normalize(value, kMinDegree, kMaxDegree);
         });
       },
@@ -189,12 +204,12 @@ class _ControlPanelPageState extends State<ControlPanelPage>
           height: 15,
         ),
         TempWidget(
-            temp: temp,
+            temp: value,
             changeTemp: (val) => setState(() {
-                  temp = val;
-
+                  value = devices[widget.selectedDeviceIndex].value ?? 0.0;
                   progressVal = normalize(val, kMinDegree, kMaxDegree);
-                })),
+                }),
+            device: devices[widget.selectedDeviceIndex]),
         const SizedBox(
           height: 15,
         ),

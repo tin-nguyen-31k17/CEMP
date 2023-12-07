@@ -42,7 +42,11 @@ class Devices extends StatelessWidget {
           closedShape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20.0))),
           openBuilder: (BuildContext context, VoidCallback _) {
-            return ControlPanelPage(tag: name, color: color);
+            return ControlPanelPage(
+                tag: name,
+                color: color,
+                selectedDeviceIndex: deviceListModel.devices
+                    .indexWhere((element) => element.id == id));
           },
           tappable: true,
           closedBuilder: (BuildContext _, VoidCallback openContainer) {

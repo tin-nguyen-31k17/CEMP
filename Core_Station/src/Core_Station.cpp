@@ -14,18 +14,59 @@
 #include "font.h"
 #include "functions.h"
 
-// Class Wifi
 WiFiMulti wifiMulti;
 
-// Class MyMQTT
 MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
 
-// Class data json already created
 SENSOR_DATA sensorData;
 
 void initVariant() {
   WiFi.mode(WIFI_AP);
   esp_wifi_set_mac(WIFI_IF_AP, &GatewayMac[0]);
+}
+
+void printSDCardInfo() {
+    uint32_t cardSize = SD.cardSize() / (1024 * 1024);
+    Serial.printf("SD Card Size: %uMB\n", cardSize);
+    M5.Displays(0).drawString("SD Card Size: " + String(cardSize) + "MB", 160, 100);
+    delay(2000);
+    M5.Displays(0).drawString("", 160, 100);
+    delay(250);
+}
+
+bool isSDCardFull() {
+    uint32_t freeSpace = SD.totalBytes() - SD.usedBytes();
+    return freeSpace == 0;
+}
+
+void formatSDCard() {
+    File root = SD.open("/");
+    if (!root) {
+        Serial.println("Failed to open directory");
+        return;
+    }
+    while (true) {
+        File file = root.openNextFile();
+        if (!file) {
+            // no more files
+            break;
+        }
+        SD.remove(file.name());
+        file.close();
+    }
+}
+
+void writeDataToSDCard(uint8_t* data, size_t length) {
+    File file = SD.open("/data.txt", FILE_APPEND);
+    if (!file) {
+        Serial.println("Failed to open file for writing");
+        return;
+    }
+    for (size_t i = 0; i < length; i++) {
+        file.printf("%02X", data[i]);
+    }
+    file.println();
+    file.close();
 }
 
 void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
@@ -37,6 +78,19 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
 
   // Copy the received data
   memcpy(receivedData, data, data_len);
+  // Switch to SD card mode
+  SPI_MODE_SDCARD;
+  // Write the received data to the SD card
+  writeDataToSDCard(receivedData, data_len);
+  // Switch back to LCD mode
+  SPI_MODE_LCD;
+  // Print the SD card information to the screen
+  printSDCardInfo();
+  // Check if the SD card is full
+  if (isSDCardFull()) {
+    // If the SD card is full, format and rewrite the data
+    formatSDCard();
+  }
 
   Serial.print("Decrypted Data: ");
   for (int i = 0; i < 7; i++) {
@@ -46,7 +100,6 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   }
   Serial.println();
   
-  // Process and publish the received data to MQTT
   for (int i = 0; i < SENSOR_COUNT; i++) {
     sensorReadings[i]=receivedData[i];
   }
@@ -56,72 +109,71 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   myMQTT.publish("/innovation/watermonitoring/", data_to_pub);
 }
 
-// Setup
 void setup() {
-  // Init Serial
   Serial.begin(115200);
 
-  // Init Preferences
   preferences.begin(NAME);
   brightness = preferences.getUInt("brightness", BRIGHTNESS);
   Serial.printf("Brightness = %d\n", brightness);
 
   auto cfg = M5.config();
 
-  cfg.clear_display = true;   // default=true. clear the screen when begin.
-  cfg.internal_imu  = true;   // default=true. use internal IMU.
-  cfg.internal_rtc  = true;   // default=true. use internal RTC.
-  cfg.internal_spk  = true;   // default=true. use internal speaker.
-  cfg.internal_mic  = true;   // default=true. use internal microphone.
-  cfg.external_imu  = false;  // default=false. use Unit Accel & Gyro.
-  cfg.external_rtc  = false;  // default=false. use Unit RTC.
+  cfg.clear_display = true;
+  cfg.internal_imu  = true;
+  cfg.internal_rtc  = true;
+  cfg.internal_spk  = true;
+  cfg.internal_mic  = true;
+  cfg.external_imu  = false;
+  cfg.external_rtc  = false;
 
-  cfg.external_display.module_display = true;   // default=true. use ModuleDisplay
-  cfg.external_display.atom_display   = true;   // default=true. use AtomDisplay
-  cfg.external_display.unit_oled      = false;  // default=true. use UnitOLED
-  cfg.external_display.unit_lcd       = false;  // default=true. use UnitLCD
-  cfg.external_display.unit_rca       = false;  // default=false. use UnitRCA VideoOutput
-  cfg.external_display.module_rca     = false;  // default=false. use ModuleRCA VideoOutput
+  cfg.external_display.module_display = true;
+  cfg.external_display.atom_display   = true;
+  cfg.external_display.unit_oled      = false;
+  cfg.external_display.unit_lcd       = false;
+  cfg.external_display.unit_rca       = false;
+  cfg.external_display.module_rca     = false;
 
   M5.begin(cfg);
 
-  // Init Leds
-#if BOARD != CORES3
-  if (M5.getBoard() == m5::board_t::board_M5Stack) {
-    FastLED.addLeds<NEOPIXEL, 15>(leds,
-                                  NUM_LEDS);  // GRB ordering is assumed
-  } else if (M5.getBoard() == m5::board_t::board_M5StackCore2) {
-    FastLED.addLeds<NEOPIXEL, 25>(leds,
-                                  NUM_LEDS);  // GRB ordering is assumed
-  }
-  FastLED.setBrightness(16);
-#endif
+  #if BOARD != CORES3
+    if (M5.getBoard() == m5::board_t::board_M5Stack) {
+      FastLED.addLeds<NEOPIXEL, 15>(leds,
+                                    NUM_LEDS);
+    } else if (M5.getBoard() == m5::board_t::board_M5StackCore2) {
+      FastLED.addLeds<NEOPIXEL, 25>(leds,
+                                    NUM_LEDS);
+    }
+    FastLED.setBrightness(16);
+  #endif
 
-  // view UI
   viewUI();
 
-  // view battery
   viewBattery();
 
-  // Init Led
-#if BOARD != CORES3
-  initLed();
-#endif
+  #if BOARD != CORES3
+    initLed();
+  #endif
 
-  // Init Physical
   initPhysical();
 
-  // Init Variant
   initVariant();
 
-  // Connect to WiFi
+  if (!SD.begin(SD_CS)) {
+    Serial.println("Card Mount Failed");
+    M5.Displays(0).drawString("Card Mount Failed", 160, 100);
+    delay(2000);
+  } else {
+    Serial.println("SD Card Initialized");
+    M5.Displays(0).drawString("SD Card Initialized", 160, 100);
+    delay(2000);
+  }
+
   Serial.print("Connecting to WiFi...");
   M5.Displays(0).drawString("Connecting to " + String(SOFTAP_SSID) + "...", 160, 100);
   delay(2000);
   M5.Displays(0).drawString("", 160, 100);
   delay(250);
 
-  // Set device in AP mode to begin with
   WiFi.mode(WIFI_AP_STA);
 
   wifiMulti.addAP(SOFTAP_SSID, SOFTAP_PASS);
@@ -134,7 +186,6 @@ void setup() {
     delay(250);
   }
 
-  // Print WiFi data
   Serial.println("Connected!");
   M5.Displays(0).drawString("Connected to " + String(SOFTAP_SSID) + "!", 160, 100);
   delay(2000);
@@ -149,10 +200,9 @@ void setup() {
   Serial.println(WiFi.localIP());
   delay(250);
 
-  myMQTT.connectToMQTT(); // Connect to MQTT server
+  myMQTT.connectToMQTT();
   myMQTT.subscribe("/innovation/watermonitoring/");
 
-  // Initialize ESP-Now
   int channel = WiFi.channel();
   if (WiFi.softAP(SOFTAP_SSID, SOFTAP_PASS, channel, 1)) {
     Serial.println("AP Config Success. AP SSID: " + String(SOFTAP_SSID));
@@ -180,32 +230,28 @@ void setup() {
     ESP.restart();
   }
 
-  // ESPNow is now initialized. Register a callback function for when data is received
   esp_now_register_recv_cb(OnDataRecv);
 
-  // Multitasking task for retreive button
-  xTaskCreatePinnedToCore(button,    // Function to implement the task
-                          "button",  // Name of the task
-                          8192,      // Stack size in words
-                          NULL,      // Task input parameter
-                          4,         // Priority of the task
-                          NULL,      // Task handle
-                          1);        // Core where the task should run
+  xTaskCreatePinnedToCore(button,
+                          "button",
+                          8192,
+                          NULL,
+                          4,
+                          NULL,
+                          1);
 
-#if BOARD != CORES3
-  xTaskCreatePinnedToCore(led,    // Function to implement the task
-                          "led",  // Name of the task
-                          1024,   // Stack size in words
-                          NULL,   // Task input parameter
-                          4,      // Priority of the task
-                          NULL,   // Task handle
-                          1);     // Core where the task should run
-#endif
+  #if BOARD != CORES3
+    xTaskCreatePinnedToCore(led,
+                            "led",
+                            1024,
+                            NULL,
+                            4,
+                            NULL,
+                            1);
+  #endif
 }
 
-// Main loop
 void loop() {
-  // refresh UI each 5 seconds
   viewUI();
   viewBattery();
 
@@ -247,14 +293,12 @@ void loop() {
   data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
   myMQTT.publish("/innovation/watermonitoring/", data_to_pub);
 
-  // Display DateTime & Long:Lat at the center of 240x320 screen
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).setTextDatum(CC_DATUM);
   M5.Displays(0).setTextPadding(20);
   M5.Displays(0).drawString(dateTimeGPS, 160, 96);
 
-  // Render result to screen
   M5.Displays(0).setFont(&digital_7__mono_24pt7b);
   M5.Displays(0).setTextDatum(CL_DATUM);
   M5.Displays(0).setTextPadding(40);
@@ -324,7 +368,6 @@ void loop() {
 
   checkWaterQuality(EC, pH, Temp, ORP);
 
-  // Wait for next measurement
   delay(10000);
   myMQTT.checkConnect();
   M5.update();

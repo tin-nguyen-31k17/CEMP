@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:water_monitoring_dashboard/utils/slider_utils.dart';
+import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/widgets/transparent_card.dart';
 
 class TempWidget extends StatelessWidget {
   final double temp;
   final Function(double) changeTemp;
+  final DeviceModel device;
 
-  const TempWidget({Key? key, required this.temp, required this.changeTemp})
-      : super(key: key);
+  const TempWidget({
+    Key? key,
+    required this.temp,
+    required this.changeTemp,
+    required this.device,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +42,9 @@ class TempWidget extends StatelessWidget {
                 ),
                 Expanded(
                   child: Slider(
-                      min: 16,
-                      max: 30,
-                      value: temp,
+                      min: kMinDegree(device.id),
+                      max: kMaxDegree(device.id),
+                      value: device.value!,
                       activeColor: Colors.white,
                       inactiveColor: Colors.white30,
                       onChanged: changeTemp),

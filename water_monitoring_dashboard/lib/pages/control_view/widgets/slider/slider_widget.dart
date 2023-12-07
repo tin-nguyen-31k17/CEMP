@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/pages/control_view/widgets/slider/custom_arc.dart';
 import 'package:water_monitoring_dashboard/utils/slider_utils.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
@@ -7,13 +8,15 @@ class SliderWidget extends StatelessWidget {
   final double progressVal;
   final Color color;
   final Function(double) onChange;
+  final DeviceModel device;
 
-  const SliderWidget(
-      {Key? key,
-      required this.progressVal,
-      required this.color,
-      required this.onChange})
-      : super(key: key);
+  SliderWidget({
+    Key? key,
+    required this.progressVal,
+    required this.color,
+    required this.onChange,
+    required this.device,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +36,7 @@ class SliderWidget extends StatelessWidget {
           ),
           Center(
             child: CustomArc(
-                color:color,
-                diameter: kDiameter,
-                sweepAngle: progressVal),
+                color: color, diameter: kDiameter, sweepAngle: progressVal),
           ),
           Center(
             child: Container(
@@ -58,9 +59,10 @@ class SliderWidget extends StatelessWidget {
                     ),
                   ]),
               child: SleekCircularSlider(
-                min: kMinDegree,
-                max: kMaxDegree,
-                initialValue: angleRange(progressVal, kMinDegree, kMaxDegree),
+                min: 0.0,
+                max: 1.0,
+                initialValue: scaleValue(device.value ?? 0.0,
+                    kMinDegree(device.id), kMaxDegree(device.id)),
                 appearance: CircularSliderAppearance(
                   spinnerMode: false,
                   startAngle: 180,
@@ -87,7 +89,7 @@ class SliderWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          percentage.toInt().toString(),
+                          device.value!.toInt().toString(),
                           style: const TextStyle(
                               height: 0,
                               fontSize: 45,
@@ -95,25 +97,17 @@ class SliderWidget extends StatelessWidget {
                               fontWeight: FontWeight.w500),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(top: 10),
+                          padding: EdgeInsets.only(top: 10),
                           child: Row(
-                            children: const [
+                            children: [
                               Text(
-                                "o",
+                                device.unit,
                                 style: TextStyle(
                                     height: 0,
                                     letterSpacing: 2,
                                     fontSize: 12,
                                     color: Colors.black,
                                     fontWeight: FontWeight.normal),
-                              ),
-                              Text(
-                                "C",
-                                style: TextStyle(
-                                    height: 0,
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
