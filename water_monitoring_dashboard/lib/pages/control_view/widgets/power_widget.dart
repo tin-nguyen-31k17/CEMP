@@ -16,7 +16,7 @@ class PowerWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Power",
+            "Alert System",
             style: TextStyle(
                 fontSize: 15, color: Colors.white, fontWeight: FontWeight.w500),
           ),
@@ -31,7 +31,7 @@ class PowerWidget extends StatelessWidget {
                 text: TextSpan(
                     text: 'OFF',
                     style: TextStyle(
-                      fontFamily: "Poppins",
+                        fontFamily: "Poppins",
                         fontSize: 14,
                         color: !isActive
                             ? Colors.white

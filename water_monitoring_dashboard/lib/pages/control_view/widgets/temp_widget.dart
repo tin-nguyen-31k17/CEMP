@@ -7,12 +7,14 @@ class TempWidget extends StatelessWidget {
   final double temp;
   final Function(double) changeTemp;
   final DeviceModel device;
+  final int selectedDeviceIndex;
 
   const TempWidget({
     Key? key,
     required this.temp,
     required this.changeTemp,
     required this.device,
+    required this.selectedDeviceIndex,
   }) : super(key: key);
 
   @override
@@ -23,8 +25,8 @@ class TempWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              "Temp",
+            Text(
+              kDeviceName(device.id),
               style: TextStyle(
                   fontSize: 15,
                   color: Colors.white,
@@ -36,8 +38,8 @@ class TempWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '16°C',
+                Text(
+                  '${kMinDegree(device.id)} ${kUnit(device.id)}',
                   style: TextStyle(color: Colors.white),
                 ),
                 Expanded(
@@ -49,8 +51,8 @@ class TempWidget extends StatelessWidget {
                       inactiveColor: Colors.white30,
                       onChanged: changeTemp),
                 ),
-                const Text(
-                  '30°C',
+                Text(
+                  '${kMaxDegree(device.id)} ${kUnit(device.id)}',
                   style: TextStyle(color: Colors.white),
                 ),
               ],

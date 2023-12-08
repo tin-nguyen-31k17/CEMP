@@ -89,7 +89,7 @@ class SliderWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          device.value!.toInt().toString(),
+                          device.value!.toStringAsFixed(1),
                           style: const TextStyle(
                               height: 0,
                               fontSize: 45,

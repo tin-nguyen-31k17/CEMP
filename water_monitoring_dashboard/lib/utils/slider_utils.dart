@@ -20,6 +20,15 @@ Map<String, List<double>> deviceRanges = {
   'TEMP_0001': [0.0, 100.0],
 };
 
-// Replace kMinDegree and kMaxDegree with functions that take a device ID and return the min and max values for that device
+Map<String, String> unit = {
+  'ec_0001': 'mS/cm',
+  'ph_0001': 'pH',
+  'ORP_0001': 'mV',
+  'TEMP_0001': '°C',
+};
+
 double kMinDegree(String deviceId) => deviceRanges[deviceId]?[0] ?? 0.0;
 double kMaxDegree(String deviceId) => deviceRanges[deviceId]?[1] ?? 100.0;
+
+String kUnit(String deviceId) => unit[deviceId] ?? 'default_unit';
+String kDeviceName(String deviceId) => '${deviceId.split('_')[0]} Sensor';

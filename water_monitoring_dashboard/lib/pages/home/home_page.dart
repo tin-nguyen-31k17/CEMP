@@ -39,21 +39,21 @@ class _HomePageState extends State<HomePage> {
           id: 'ph_0001',
           unit: 'pH'),
       DeviceModel(
-          name: 'ORP Sensor',
-          color: Colors.grey,
-          isActive: false,
-          icon: 'assets/svg/IconORP.svg',
-          value: 0.0,
-          id: 'ORP_0001',
-          unit: 'mV'),
-      DeviceModel(
           name: 'Temp Sensor',
-          color: Colors.red,
+          color: Colors.grey,
           isActive: false,
           icon: 'assets/svg/IconTemp.svg',
           value: 0.0,
           id: 'TEMP_0001',
           unit: '°C'),
+      DeviceModel(
+          name: 'ORP Sensor',
+          color: Colors.red,
+          isActive: false,
+          icon: 'assets/svg/IconORP.svg',
+          value: 0.0,
+          id: 'ORP_0001',
+          unit: 'mV'),
     ];
 
     Future.delayed(Duration.zero, () {
