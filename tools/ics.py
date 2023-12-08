@@ -1,6 +1,8 @@
 import argparse
+import os
 from PIL import Image
 import io
+from cairosvg import svg2png
 
 def png_to_header(input_file, output_file, array_name):
     with open(input_file, 'rb') as f:
@@ -24,6 +26,13 @@ def png_to_header(input_file, output_file, array_name):
 
         f.write('\n};\n')
 
+def convert_svg_to_png(input_file):
+    if os.path.splitext(input_file)[1].lower() == '.svg':
+        output_file = os.path.splitext(input_file)[0] + '.png'
+        svg2png(url=input_file, write_to=output_file)
+        return output_file
+    return input_file
+
 def main():
     parser = argparse.ArgumentParser(description='Convert a PNG file to a C++ header file.')
     parser.add_argument('input_file', help='The input PNG file.')
@@ -31,7 +40,8 @@ def main():
     parser.add_argument('array_name', help='The name for the array in the header file.')
     args = parser.parse_args()
 
-    png_to_header(args.input_file, args.output_file, args.array_name)
+    input_file = convert_svg_to_png(args.input_file)
+    png_to_header(input_file, args.output_file, args.array_name)
 
 if __name__ == '__main__':
     main()

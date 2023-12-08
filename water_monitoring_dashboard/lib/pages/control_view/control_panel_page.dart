@@ -52,10 +52,6 @@ class _ControlPanelPageState extends State<ControlPanelPage>
     value = devices[widget.selectedDeviceIndex].value ?? 0.0;
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {

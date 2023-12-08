@@ -10,7 +10,7 @@ class SliderWidget extends StatelessWidget {
   final Function(double) onChange;
   final DeviceModel device;
 
-  SliderWidget({
+  const SliderWidget({
     Key? key,
     required this.progressVal,
     required this.color,
@@ -97,12 +97,12 @@ class SliderWidget extends StatelessWidget {
                               fontWeight: FontWeight.w500),
                         ),
                         Padding(
-                          padding: EdgeInsets.only(top: 10),
+                          padding: const EdgeInsets.only(top: 10),
                           child: Row(
                             children: [
                               Text(
                                 device.unit,
-                                style: TextStyle(
+                                style: const TextStyle(
                                     height: 0,
                                     letterSpacing: 2,
                                     fontSize: 12,
