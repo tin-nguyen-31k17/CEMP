@@ -1,4 +1,10 @@
-// View UI
+/*
+  Project: CEMP Mobility Water Monitoring Station
+  Author: Nguyen Trong Tin
+  Email:tin.nguyen.31k17@hcmut.edu.vn
+  Description: This code is part of the CEMP Mobility Water Monitoring Station project.
+*/
+
 void viewUI() {
   M5.Displays(0).setBrightness(brightness);
   M5.Displays(0).fillScreen(TFT_SCREEN_BG);
@@ -47,7 +53,6 @@ void viewBattery() {
   batteryLevel = map(getBatteryLevel(), 0, 100, 0, 17);
   batteryCharging = isCharging();
 
-  // Always update battery level and charging status
   batteryLevelOld = batteryLevel;
   batteryCharginglOld = batteryCharging;
 
@@ -116,21 +121,17 @@ void initPhysical() {
 #endif
 }
 
-// Fade all led
 void fadeall() {
   for (uint8_t i = 0; i < NUM_LEDS; i++) {
     leds[i].nscale8(100);
   }
 }
 
-// Led task
 void led(void *pvParameters) {
   for (;;) {
-    // First slide the led in one direction
     for (uint8_t i = 0; i < NUM_LEDS; i++) {
       leds[i] = m5goColor;
       ;
-      // Show the leds
       FastLED.show();
       fadeall();
       vTaskDelay(pdMS_TO_TICKS(50));

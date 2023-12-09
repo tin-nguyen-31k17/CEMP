@@ -1,3 +1,10 @@
+/*
+  Project: CEMP Mobility Water Monitoring Station
+  Author: Nguyen Trong Tin
+  Email:tin.nguyen.31k17@hcmut.edu.vn
+  Description: This code is part of the CEMP Mobility Water Monitoring Station project.
+*/
+
 #include <pgmspace.h>  // PROGMEM support header
 
 PROGMEM const uint8_t EC[] = {

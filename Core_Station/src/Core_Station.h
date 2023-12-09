@@ -6,7 +6,6 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project. It is the header file of the WaterStation.cpp file.
 */
 
-// Version
 #define VERSION "1.1.3"
 #define AUTHOR  "Tin Nguyen"
 #define NAME    "WaterStation"
@@ -20,8 +19,6 @@
 // #define SOFTAP_PASS "Cmbuilderx@X"
 // #define SOFTAP_SSID "HPCCLAB"
 // #define SOFTAP_PASS "hpccw1f1"
-#define SOFTAP_SSID "Trustin iPhone"
-#define SOFTAP_PASS "tin1752545"
 #define SENSOR_COUNT 12
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)

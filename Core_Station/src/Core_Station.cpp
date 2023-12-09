@@ -48,7 +48,6 @@ void formatSDCard() {
     while (true) {
         File file = root.openNextFile();
         if (!file) {
-            // no more files
             break;
         }
         SD.remove(file.name());
@@ -76,19 +75,12 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   Serial.print("\nData received from: ");
   Serial.println(macStr);
 
-  // Copy the received data
   memcpy(receivedData, data, data_len);
-  // Switch to SD card mode
   SPI_MODE_SDCARD;
-  // Write the received data to the SD card
   writeDataToSDCard(receivedData, data_len);
-  // Switch back to LCD mode
   SPI_MODE_LCD;
-  // Print the SD card information to the screen
   printSDCardInfo();
-  // Check if the SD card is full
   if (isSDCardFull()) {
-    // If the SD card is full, format and rewrite the data
     formatSDCard();
   }
 
