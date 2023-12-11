@@ -11,6 +11,9 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <CircularBuffer.h>
+#include <TinyGsmClient.h>
+#include <time.h>
+#include <sys/time.h>
 
 #define WIFI_CHANNEL 1
 #define SENSOR_COUNT 4
@@ -36,3 +39,16 @@ uint8_t dataToSend[SENSOR_COUNT*3] = {0}; // Array to send sensor readings
 float sensorReadings[SENSOR_COUNT] = {0};
 uint8_t Lon, Lat, Day, Month, Year, Hour, Minute, Second;
 String dateTime;
+
+MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
+
+TinyGsm modem(SerialAT);
+
+TinyGsmClient tcpClient(modem);
+
+const char apn[]      = "internet";
+const char gprsUser[] = "";
+const char gprsPass[] = "";
+
+int failedSendCount = 0;
+int MAX_FAILED_SENDS =3;

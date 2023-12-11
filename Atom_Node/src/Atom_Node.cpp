@@ -5,8 +5,41 @@
     Description: This code is part of the CEMP Mobility Water Monitoring Station project.
 */
 
+#include "MQTT_helper.h"
+#include "Atom_DTU_CAT1.h"
 #include "sensor_data.h"
 #include "Atom_Node.h"
+
+void InitNetwork(void) {
+    unsigned long start = millis();
+    SerialMon.println("Initializing modem...");
+    while (!modem.init()) {
+        SerialMon.println("waiting...." + String((millis() - start) / 1000) +
+                          "s");
+    };
+
+    start = millis();
+    SerialMon.println("Waiting for network...");
+    while (!modem.waitForNetwork()) {
+        SerialMon.println("waiting...." + String((millis() - start) / 1000) +
+                          "s");
+    }
+
+    SerialMon.println("Waiting for GPRS connect...");
+    if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
+        SerialMon.println("waiting...." + String((millis() - start) / 1000) +
+                          "s");
+    }
+    SerialMon.println("success");
+}
+
+void initDTULTE() {
+  SerialAT.begin(SIM7680_BAUDRATE, SERIAL_8N1, ATOM_DTU_RS485_RX, ATOM_DTU_RS485_TX);
+  InitNetwork();
+  myMQTT.connectToMQTT();
+  myMQTT.subscribe("/innovation/watermonitoring");
+  Serial.println("DTU LTE module initialized!");
+}
 
 void backupMessage(const uint8_t* data, size_t size) {
     if (backupIndex + size <= BACKUP_BUFFER_SIZE) {
@@ -191,6 +224,21 @@ void loop() {
       Serial.println("Message sent failed! Backing up the data.");
       backupMessage(dataToSend, sizeof(dataToSend));
       Serial.println();
+      failedSendCount++;
+      if (failedSendCount > MAX_FAILED_SENDS) {
+        Serial.println("Failed to send message 3 times. Initiating DTU LTE module...");
+        initDTULTE();
+        Serial.println("DTU LTE module initialized!");
+        Serial.println("Sending message...");
+        String messageToSend;
+        for (int i = 0; i < SENSOR_COUNT; i++) {
+          messageToSend += String(dataToSend[i], HEX);
+          messageToSend += ", ";
+      }
+      myMQTT.publish("/innovation/watermonitoring", messageToSend);
+      Serial.println("Message sent successfully via DTU LTE module!");
+      failedSendCount = 0;
+    }
     }
   });
 
@@ -211,7 +259,7 @@ void loop() {
 
   esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
 
-  if (result == ESP_OK) {
+  if (result == ESP_NOW_SEND_SUCCESS) {
     Serial.println("Success");
   } else {
     Serial.print("Sending result: ");
