@@ -8,6 +8,7 @@
 #include "MQTT_helper.h"
 #include "Atom_DTU_CAT1.h"
 #include "sensor_data.h"
+#include "M5_LoRaWAN.h"
 #include "Atom_Node.h"
 
 void InitNetwork(void) {
@@ -37,7 +38,7 @@ void initDTULTE() {
   SerialAT.begin(SIM7680_BAUDRATE, SERIAL_8N1, ATOM_DTU_RS485_RX, ATOM_DTU_RS485_TX);
   InitNetwork();
   myMQTT.connectToMQTT();
-  myMQTT.subscribe("/innovation/watermonitoring");
+  myMQTT.subscribe(myTopic);
   Serial.println("DTU LTE module initialized!");
 }
 
@@ -224,7 +225,7 @@ void loop() {
       Serial.println("Message sent failed! Backing up the data.");
       backupMessage(dataToSend, sizeof(dataToSend));
       Serial.println();
-      failedSendCount++;
+      failedSendCount++;      
       if (failedSendCount > MAX_FAILED_SENDS) {
         Serial.println("Failed to send message 3 times. Initiating DTU LTE module...");
         initDTULTE();
@@ -235,10 +236,9 @@ void loop() {
           messageToSend += String(dataToSend[i], HEX);
           messageToSend += ", ";
       }
-      myMQTT.publish("/innovation/watermonitoring", messageToSend);
+      myMQTT.publish(myTopic, messageToSend);
       Serial.println("Message sent successfully via DTU LTE module!");
       failedSendCount = 0;
-    }
     }
   });
 

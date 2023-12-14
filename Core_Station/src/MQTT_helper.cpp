@@ -7,6 +7,8 @@
 
 #include "MQTT_helper.h"
 
+String lastMessage = "";  // Class variable to store the last received message
+
 void MyMQTT::connectToMQTT() {
     client.setServer(mqtt_server.c_str(), 1883);
     reConnect();
@@ -48,12 +50,13 @@ void MyMQTT::checkConnect(){
 }
 
 void MyMQTT::callback(char* topic, byte* payload, unsigned int length) {
-    // Your callback implementation here
     Serial.print("Message arrived [");
     Serial.print(topic);
     Serial.print("] ");
+    lastMessage = "";  // Clear the last message
     for (int i = 0; i < length; i++) {
         Serial.print((char)payload[i]);
+        lastMessage += (char)payload[i];  // Store the new message
     }
     Serial.println();
 }
@@ -72,3 +75,6 @@ void MyMQTT::reConnect() {
     }
 }
 
+String MyMQTT::getMessage() {
+    return lastMessage;
+}

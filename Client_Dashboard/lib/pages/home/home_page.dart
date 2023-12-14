@@ -10,6 +10,7 @@ import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/pages/home/widgets/devices.dart';
 import 'package:water_monitoring_dashboard/utils/mqtt_manager.dart';
 import 'package:water_monitoring_dashboard/model/device_list_model.dart';
+import 'package:water_monitoring_dashboard/service/location_service.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,7 +26,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    final mqttManager = MQTTManager(onMessageReceived: _updateDevices);
+    final locationService = LocationService();
+    final mqttManager = MQTTManager(
+      onMessageReceived: _updateDevices,
+      locationService: locationService,
+    );
     mqttManager.initializeMQTTClient().then((value) => mqttManager.connect());
 
     devices = [

@@ -19,6 +19,7 @@ import 'package:rainbow_color/rainbow_color.dart';
 import 'package:provider/provider.dart';
 import 'package:water_monitoring_dashboard/model/device_list_model.dart';
 import 'package:water_monitoring_dashboard/model/device_model.dart';
+import 'package:water_monitoring_dashboard/pages/gps_tracking_page.dart';
 
 class ControlPanelPage extends StatefulWidget {
   final String tag;
@@ -37,7 +38,7 @@ class ControlPanelPage extends StatefulWidget {
 
 class _ControlPanelPageState extends State<ControlPanelPage>
     with TickerProviderStateMixin {
-  Options option = Options.cooling;
+  Options option = Options.setting;
   bool isActive = false;
   int level = 1;
   double value = 0.0;
@@ -132,34 +133,37 @@ class _ControlPanelPageState extends State<ControlPanelPage>
       children: [
         OptionWidget(
           icon: 'assets/svg/clock.svg',
-          isSelected: option == Options.timer,
+          isSelected: option == Options.history,
           onTap: () => setState(() {
-            option = Options.timer;
+            option = Options.history;
           }),
           size: 32,
         ),
         OptionWidget(
           icon: 'assets/svg/control.svg',
-          isSelected: option == Options.cooling,
+          isSelected: option == Options.setting,
           onTap: () => setState(() {
-            option = Options.cooling;
+            option = Options.setting;
           }),
           size: 25,
         ),
         OptionWidget(
           icon: 'assets/svg/audit.svg',
-          isSelected: option == Options.heat,
+          isSelected: option == Options.analyze,
           onTap: () => setState(() {
-            option = Options.heat;
+            option = Options.analyze;
           }),
           size: 35,
         ),
         OptionWidget(
           icon: 'assets/svg/gps.svg',
-          isSelected: option == Options.dry,
-          onTap: () => setState(() {
-            option = Options.dry;
-          }),
+          isSelected: option == Options.gps,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => GPSTrackingPage()),
+            );
+          },
           size: 28,
         ),
       ],

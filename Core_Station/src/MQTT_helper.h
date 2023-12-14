@@ -22,6 +22,7 @@ public:
     void subscribe(String);
     bool publish(String, String);
     void checkConnect();
+    String getMessage();
 
 private:
     void callback(char*, byte*, unsigned int);

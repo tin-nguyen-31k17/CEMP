@@ -19,6 +19,8 @@
 // #define SOFTAP_PASS "Cmbuilderx@X"
 // #define SOFTAP_SSID "HPCCLAB"
 // #define SOFTAP_PASS "hpccw1f1"
+#define SOFTAP_SSID "Trustin iPhone"
+#define SOFTAP_PASS "tin1752545"
 #define SENSOR_COUNT 12
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)
@@ -44,20 +46,31 @@ Preferences preferences;
 #define FASTLED_INTERNAL  // To disable pragma messages on compile
 #define NUM_LEDS 10
 CRGB leds[NUM_LEDS];
+CRGB m5goColor = CRGB::Blue;
+
+// SD Card
+#define SD_CS 4
+#define SPI_MODE_LCD { pinMode(TFT_DC, OUTPUT); digitalWrite(TFT_DC, HIGH); }
+#define SPI_MODE_SDCARD { pinMode(TFT_DC, INPUT); }
 
 // Variables
 uint16_t brightness      = BRIGHTNESS;
 uint16_t batteryLevelOld = 1024;
 boolean batteryCharginglOld = true;
 float temperatureOffset;
-#define SD_CS 4
-#define SPI_MODE_LCD { pinMode(TFT_DC, OUTPUT); digitalWrite(TFT_DC, HIGH); }
-#define SPI_MODE_SDCARD { pinMode(TFT_DC, INPUT); }
+uint8_t Lon, Lat, Day, Month, Year, Hour, Minute, Second;
+String dateTimeGPS;
+SENSOR_DATA sensorData;
+bool messageReceived = false;
 
+// ESP-NOW
 uint8_t GatewayMac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
 uint8_t receivedData[SENSOR_COUNT] = {0};
 float sensorReadings[SENSOR_COUNT] = {0};
-uint8_t Lon, Lat, Day, Month, Year, Hour, Minute, Second;
-String dateTimeGPS;
 
-CRGB m5goColor = CRGB::Blue;
+// WiFi
+WiFiMulti wifiMulti;
+
+// MQTT Server
+MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
+String myTopic = "/innovation/watermonitoring";

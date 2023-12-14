@@ -6,23 +6,48 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project. It is used to monitor several sensors and publish the data to MQTT along with a nice UI to show sensor data and the battery level.
 */
 
-#include "Core_Station.h"
 #include "MQTT_helper.h"
 #include "sensor_data.h"
+#include "Core_Station.h"
 #include "tools.h"
 #include "images.h"
 #include "font.h"
 #include "functions.h"
 
-WiFiMulti wifiMulti;
-
-MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
-
-SENSOR_DATA sensorData;
-
 void initVariant() {
   WiFi.mode(WIFI_AP);
   esp_wifi_set_mac(WIFI_IF_AP, &GatewayMac[0]);
+}
+
+void decodeMessage(String message) {
+    const size_t capacity = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(5) + 290;
+    DynamicJsonDocument doc(capacity);
+
+    deserializeJson(doc, message);
+
+    const char* station_id = doc["station_id"]; 
+    const char* station_name = doc["station_name"]; 
+    receivedData[4] = doc["gps_longitude"].as<float>(); 
+    receivedData[5] = doc["gps_latitude"].as<float>(); 
+
+    JsonArray sensors = doc["sensors"];
+    for(JsonVariant v : sensors) {
+      String sensor_id = v["sensor_id"].as<String>(); 
+      const char* sensor_name = v["sensor_name"]; 
+      float sensor_value = v["sensor_value"].as<float>(); 
+      const char* sensor_unit = v["sensor_unit"]; 
+
+      // Map the sensor values to the receivedData array
+      if (sensor_id == "ec_0001") {
+          receivedData[0] = sensor_value;
+      } else if (sensor_id == "ph_0001") {
+          receivedData[1] = sensor_value;
+      } else if (sensor_id == "ORP_0001") {
+          receivedData[2] = sensor_value;
+      } else if (sensor_id == "TEMP_0001") {
+          receivedData[3] = sensor_value;
+      }
+    }
 }
 
 void printSDCardInfo() {
@@ -98,7 +123,8 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
 
   String data_to_pub;
   data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], sensorReadings[4], sensorReadings[5]);
-  myMQTT.publish("/innovation/watermonitoring/", data_to_pub);
+  myMQTT.publish(myTopic, data_to_pub);
+  messageReceived = true;
 }
 
 void setup() {
@@ -193,7 +219,7 @@ void setup() {
   delay(250);
 
   myMQTT.connectToMQTT();
-  myMQTT.subscribe("/innovation/watermonitoring/");
+  myMQTT.subscribe(myTopic);
 
   int channel = WiFi.channel();
   if (WiFi.softAP(SOFTAP_SSID, SOFTAP_PASS, channel, 1)) {
@@ -260,30 +286,24 @@ void loop() {
   Hour = receivedData[9];
   Minute = receivedData[10];
   Second = receivedData[11];
+  dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) 
+              + "/" + "20" + String(Year) + " " + String(Hour) 
+              + ":" + String(Minute) + ":" + String(Second) 
+              + " GPS: " + String(float(Lon)) 
+              + ":" + String(float(Lat));
 
-  if (EC == 0 && pH == 0 && Temp == 0 && ORP == 0) {
-    EC = random(0, 100);
-    pH = random(0, 14);
-    Temp = random(0, 50);
-    ORP = random(0, 1000);
-  }
-
-  if (Lon == 0 && Lat == 0) {
-    Lon = 106.99;
-    Lat = 10.2;
-    Day = random(1, 31);
-    Month = random(1, 12);
-    Year = random(20, 30);
-    Hour = random(0, 24);
-    Minute = random(0, 60);
-    Second = random(0, 60);
-  }
-
-  dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second) + " GPS: " + String(float(Lon)) + ":" + String(float(Lat));
-
-  String data_to_pub;
-  data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
-  myMQTT.publish("/innovation/watermonitoring/", data_to_pub);
+  Serial.println(messageReceived);
+  if (!messageReceived) {
+    // No message received from ESP-NOW, get message from MQTT server
+    String mqttMessage = myMQTT.getMessage();
+    decodeMessage(mqttMessage);
+    Serial.println(mqttMessage);
+  } else {
+    String data_to_pub;
+    data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
+    myMQTT.publish(myTopic, data_to_pub);
+    }
+  messageReceived = false;  // Reset the flag
 
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);

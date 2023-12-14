@@ -5,6 +5,7 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project.
 */
 import 'package:flutter/material.dart';
+import 'gps_model.dart';
 
 class DeviceModel {
   String name;
@@ -14,6 +15,7 @@ class DeviceModel {
   double? value;
   String id;
   String unit;
+  GPSModel? gps;
 
   DeviceModel({
     required this.name,
@@ -23,6 +25,7 @@ class DeviceModel {
     required this.value,
     required this.id,
     required this.unit,
+    this.gps,
   });
   static Color _parseHexColor(String hexColor) {
     hexColor = hexColor.toUpperCase().replaceAll("#", "");

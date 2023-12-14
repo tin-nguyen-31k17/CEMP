@@ -5,4 +5,4 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project.
 */
 
-enum Options { timer, cooling, heat, dry }
+enum Options { history, setting, analyze, gps }

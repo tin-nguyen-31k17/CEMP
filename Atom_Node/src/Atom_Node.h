@@ -41,6 +41,7 @@ uint8_t Lon, Lat, Day, Month, Year, Hour, Minute, Second;
 String dateTime;
 
 MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
+String myTopic = "/innovation/watermonitoring";
 
 TinyGsm modem(SerialAT);
 
@@ -52,3 +53,10 @@ const char gprsPass[] = "";
 
 int failedSendCount = 0;
 int MAX_FAILED_SENDS =3;
+
+#define ATOM_LORA_RX 32
+#define ATOM_LORA_TX 26
+
+M5_LoRaWAN LoRaWAN;
+
+String response;

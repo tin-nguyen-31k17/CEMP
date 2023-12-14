@@ -8,6 +8,7 @@
 import 'dart:convert';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:water_monitoring_dashboard/service/location_service.dart';
 
 class MQTTManager {
   final String serverUri = "mqttserver.tk";
@@ -19,8 +20,9 @@ class MQTTManager {
 
   late MqttServerClient _client;
   Function(Map<String, dynamic>)? onMessageReceived;
+  final LocationService locationService;
 
-  MQTTManager({this.onMessageReceived}) {
+  MQTTManager({this.onMessageReceived, required this.locationService}) {
     _client = MqttServerClient.withPort(serverUri, clientId, port);
   }
 
@@ -70,7 +72,8 @@ class MQTTManager {
       String decodeMessage = const Utf8Decoder().convert(message.codeUnits);
       print("MQTTClientWrapper:: Decoded message: $decodeMessage");
       Map<String, dynamic> messageJson = jsonDecode(decodeMessage);
-      onMessageReceived!(messageJson);
+      // Move the camera to the fixed position
+      locationService.moveCamera();
     });
   }
 
