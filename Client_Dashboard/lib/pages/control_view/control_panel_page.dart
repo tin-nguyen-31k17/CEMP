@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'package:water_monitoring_dashboard/model/device_list_model.dart';
 import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/pages/control_view/gps_tracking_page.dart';
+import 'package:water_monitoring_dashboard/pages/control_view/history_chart_page.dart';
 
 class ControlPanelPage extends StatefulWidget {
   final String tag;
@@ -134,9 +135,15 @@ class _ControlPanelPageState extends State<ControlPanelPage>
         OptionWidget(
           icon: 'assets/svg/clock.svg',
           isSelected: option == Options.history,
-          onTap: () => setState(() {
-            option = Options.history;
-          }),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => TimeChartPage(
+                      title: 'Time Chart',
+                      device: devices[widget.selectedDeviceIndex])),
+            );
+          },
           size: 32,
         ),
         OptionWidget(
