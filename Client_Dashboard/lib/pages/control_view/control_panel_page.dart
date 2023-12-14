@@ -12,14 +12,14 @@ import 'package:water_monitoring_dashboard/pages/control_view/options_enum.dart'
 import 'package:water_monitoring_dashboard/pages/control_view/widgets/power_widget.dart';
 import 'package:water_monitoring_dashboard/pages/control_view/widgets/slider/slider_widget.dart';
 import 'package:water_monitoring_dashboard/pages/control_view/widgets/warning_widget.dart';
-import 'package:water_monitoring_dashboard/pages/control_view/widgets/temp_widget.dart';
+import 'package:water_monitoring_dashboard/pages/control_view/widgets/threshold_widget.dart';
 import 'package:water_monitoring_dashboard/utils/slider_utils.dart';
 import 'package:water_monitoring_dashboard/widgets/custom_appbar.dart';
 import 'package:rainbow_color/rainbow_color.dart';
 import 'package:provider/provider.dart';
 import 'package:water_monitoring_dashboard/model/device_list_model.dart';
 import 'package:water_monitoring_dashboard/model/device_model.dart';
-import 'package:water_monitoring_dashboard/pages/gps_tracking_page.dart';
+import 'package:water_monitoring_dashboard/pages/control_view/gps_tracking_page.dart';
 
 class ControlPanelPage extends StatefulWidget {
   final String tag;
@@ -212,10 +212,10 @@ class _ControlPanelPageState extends State<ControlPanelPage>
         const SizedBox(
           height: 15,
         ),
-        TempWidget(
+        ThresholdWidget(
           selectedDeviceIndex: widget.selectedDeviceIndex,
-          temp: value,
-          changeTemp: (value) => setState(() {
+          value: value,
+          changeThreshold: (value) => setState(() {
             value = devices[widget.selectedDeviceIndex].value ?? 0.0;
             progressVal = normalize(value, kMinDegree, kMaxDegree);
           }),

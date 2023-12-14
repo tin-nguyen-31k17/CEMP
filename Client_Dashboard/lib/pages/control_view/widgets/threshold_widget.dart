@@ -9,16 +9,16 @@ import 'package:water_monitoring_dashboard/utils/slider_utils.dart';
 import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/widgets/transparent_card.dart';
 
-class TempWidget extends StatelessWidget {
-  final double temp;
-  final Function(double) changeTemp;
+class ThresholdWidget extends StatelessWidget {
+  final double value;
+  final Function(double) changeThreshold;
   final DeviceModel device;
   final int selectedDeviceIndex;
 
-  const TempWidget({
+  ThresholdWidget({
     Key? key,
-    required this.temp,
-    required this.changeTemp,
+    required this.value,
+    required this.changeThreshold,
     required this.device,
     required this.selectedDeviceIndex,
   }) : super(key: key);
@@ -32,7 +32,7 @@ class TempWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              kDeviceName(device.id),
+              "Setting Threshold Warning for ${kDeviceName(device.id)}",
               style: const TextStyle(
                   fontSize: 15,
                   color: Colors.white,
@@ -41,27 +41,30 @@ class TempWidget extends StatelessWidget {
             const SizedBox(
               height: 5,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${kMinDegree(device.id)} ${kUnit(device.id)}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                Expanded(
-                  child: Slider(
-                      min: kMinDegree(device.id),
-                      max: kMaxDegree(device.id),
-                      value: device.value!,
-                      activeColor: Colors.white,
-                      inactiveColor: Colors.white30,
-                      onChanged: changeTemp),
-                ),
-                Text(
-                  '${kMaxDegree(device.id)} ${kUnit(device.id)}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
+            Expanded(
+              // Wrap the Row with an Expanded widget
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${kMinDegree(device.id)} ${kUnit(device.id)}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  Expanded(
+                    child: Slider(
+                        min: kMinDegree(device.id),
+                        max: kMaxDegree(device.id),
+                        value: device.value!.toDouble(),
+                        activeColor: Colors.white,
+                        inactiveColor: Colors.white30,
+                        onChanged: (value) => changeThreshold(value)),
+                  ),
+                  Text(
+                    '${kMaxDegree(device.id)} ${kUnit(device.id)}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(
               height: 12,
