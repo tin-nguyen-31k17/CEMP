@@ -8,7 +8,6 @@
 #include "MQTT_helper.h"
 #include "Atom_DTU_CAT1.h"
 #include "sensor_data.h"
-#include "M5_LoRaWAN.h"
 #include "Atom_Node.h"
 
 void InitNetwork(void) {
@@ -35,10 +34,8 @@ void InitNetwork(void) {
 }
 
 void initDTULTE() {
-  SerialAT.begin(SIM7680_BAUDRATE, SERIAL_8N1, ATOM_DTU_RS485_RX, ATOM_DTU_RS485_TX);
+  SerialAT.begin(SIM7680_BAUDRATE, SERIAL_8N1, ATOM_DTU_SIM7680_RX, ATOM_DTU_SIM7680_TX);
   InitNetwork();
-  myMQTT.connectToMQTT();
-  myMQTT.subscribe(myTopic);
   Serial.println("DTU LTE module initialized!");
 }
 
@@ -230,6 +227,12 @@ void loop() {
         Serial.println("Failed to send message 3 times. Initiating DTU LTE module...");
         initDTULTE();
         Serial.println("DTU LTE module initialized!");
+        delay(1000);
+        Serial.println("Connecting to MQTT server...");
+        myMQTT.connectToMQTT();
+        Serial.println("Connected to MQTT server!");
+        myMQTT.subscribe(myTopic);
+        Serial.println("Subscribed to topic: " + myTopic);
         Serial.println("Sending message...");
         String messageToSend;
         for (int i = 0; i < SENSOR_COUNT; i++) {
@@ -239,6 +242,7 @@ void loop() {
       myMQTT.publish(myTopic, messageToSend);
       Serial.println("Message sent successfully via DTU LTE module!");
       failedSendCount = 0;
+      }
     }
   });
 

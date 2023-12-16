@@ -47,16 +47,9 @@ TinyGsm modem(SerialAT);
 
 TinyGsmClient tcpClient(modem);
 
-const char apn[]      = "internet";
-const char gprsUser[] = "";
+const char apn[]      = "m-wap";
+const char gprsUser[] = "mms";
 const char gprsPass[] = "";
 
 int failedSendCount = 0;
 int MAX_FAILED_SENDS =3;
-
-#define ATOM_LORA_RX 32
-#define ATOM_LORA_TX 26
-
-M5_LoRaWAN LoRaWAN;
-
-String response;
