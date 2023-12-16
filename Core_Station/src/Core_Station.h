@@ -17,10 +17,10 @@
 
 // #define SOFTAP_SSID "A-Automator"
 // #define SOFTAP_PASS "Cmbuilderx@X"
-// #define SOFTAP_SSID "HPCCLAB"
-// #define SOFTAP_PASS "hpccw1f1"
-#define SOFTAP_SSID "Trustin iPhone"
-#define SOFTAP_PASS "tin1752545"
+#define SOFTAP_SSID "HPCCLAB"
+#define SOFTAP_PASS "hpccw1f1"
+// #define SOFTAP_SSID "Trustin iPhone"
+// #define SOFTAP_PASS "tin1752545"
 #define SENSOR_COUNT 12
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)

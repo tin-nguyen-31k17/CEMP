@@ -54,6 +54,25 @@ class _ControlPanelPageState extends State<ControlPanelPage>
     const Color(0xFFE4262F)
   ], rangeStart: 0.0, rangeEnd: 1.0);
 
+  void onGPSOptionSelected() {
+    final List<DeviceModel> deviceData =
+        Provider.of<DeviceListModel>(context, listen: false).devices;
+    if (deviceData[widget.selectedDeviceIndex].gps != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GPSTrackingPage(
+            deviceData: deviceData,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('GPS data not available for the selected device')),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -166,10 +185,7 @@ class _ControlPanelPageState extends State<ControlPanelPage>
           icon: 'assets/svg/gps.svg',
           isSelected: option == Options.gps,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => GPSTrackingPage()),
-            );
+            onGPSOptionSelected();
           },
           size: 28,
         ),

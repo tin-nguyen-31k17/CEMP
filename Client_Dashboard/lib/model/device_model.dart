@@ -36,24 +36,38 @@ class DeviceModel {
   }
 
   factory DeviceModel.fromJson(Map<String, dynamic> json) {
+    GPSModel? gpsModel;
+    if (json.containsKey('gps_longitude') && json.containsKey('gps_latitude')) {
+      gpsModel = GPSModel(
+        longitude: double.tryParse(json['gps_longitude'].toString()) ?? 106.6553269,
+        latitude: double.tryParse(json['gps_latitude'].toString()) ?? 10.7720803,
+      );
+    }
+
     return DeviceModel(
       name: json['name'] ?? 'default_name',
       color: _parseHexColor(json['color'] ?? '#FFFFFF'),
       isActive: json['isActive'] ?? false,
       icon: json['icon'] ?? 'default_icon',
-      value: json['value']?.toDouble(),
-      id: json['id'] ?? 0,
+      value: (json['value'] as num?)?.toDouble(),
+      id: json['id']?.toString() ?? '0',
       unit: json['unit'] ?? 'default_unit',
+      gps: gpsModel,
     );
   }
   Map<String, dynamic> toJson() {
-    return {
+    var json = {
       'name': name,
       'color': color.value.toRadixString(16),
       'isActive': isActive,
       'icon': icon,
       'value': value,
       'id': id,
+      'unit': unit,
     };
+    if (gps != null) {
+      json.addAll(gps!.toJson());
+    }
+    return json;
   }
 }

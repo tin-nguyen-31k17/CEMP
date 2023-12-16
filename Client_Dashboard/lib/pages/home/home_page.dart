@@ -10,6 +10,7 @@ import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/pages/home/widgets/devices.dart';
 import 'package:water_monitoring_dashboard/utils/mqtt_manager.dart';
 import 'package:water_monitoring_dashboard/model/device_list_model.dart';
+import 'package:water_monitoring_dashboard/model/gps_model.dart';
 import 'package:water_monitoring_dashboard/service/location_service.dart';
 import 'package:provider/provider.dart';
 
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
       onMessageReceived: _updateDevices,
       locationService: locationService,
     );
+
     mqttManager.initializeMQTTClient().then((value) => mqttManager.connect());
 
     devices = [
@@ -95,6 +97,15 @@ class _HomePageState extends State<HomePage> {
           device.value = double.parse(sensor['sensor_value']);
           device.isActive = true;
           print("Updated device: ${device.name}, Value: ${device.value}");
+        }
+
+        GPSModel gpsModel = GPSModel(
+          longitude: double.tryParse(messageJson['gps_longitude'].toString()) ?? 0.0,
+          latitude: double.tryParse(messageJson['gps_latitude'].toString()) ?? 0.0,
+        );
+
+        for (var device in devices) {
+          device.gps = gpsModel;
         }
       });
     } else {

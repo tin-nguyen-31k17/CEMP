@@ -98,7 +98,7 @@ void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* senso
 }
 
 void generateRandomSensorData(float& sensorReading) {
-  sensorReading = random(0, 100);
+  sensorReading = random(0, 14);
 }
 
 void generateRandDateTimeGPS() {
@@ -109,8 +109,9 @@ void generateRandDateTimeGPS() {
   Minute = random(0, 60);
   Second = random(0, 60);
 
-  Lon = random(0, 360);
-  Lat = random(0, 180);
+  // random float long and lat
+  Lon = random(105.1, 109.9);
+  Lat = random(10.1, 11.9);
 
   dateTime = String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second);
 }

@@ -12,7 +12,7 @@ from cairosvg import svg2png
 def png_to_header(input_file, output_file, array_name):
     with open(input_file, 'rb') as f:
         img = Image.open(f)
-        img.thumbnail((64, 64))  # Resize the image
+        img.thumbnail((120, 120))  # Resize the image
         byte_arr = io.BytesIO()
         img.save(byte_arr, format='PNG')
         data = byte_arr.getvalue()

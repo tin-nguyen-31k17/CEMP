@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:water_monitoring_dashboard/service/location_service.dart';
+import 'package:water_monitoring_dashboard/model/gps_model.dart';
 
 class MQTTManager {
   final String serverUri = "mqttserver.tk";
@@ -16,7 +17,7 @@ class MQTTManager {
   final String clientId = "innovation";
   final String username = "innovation";
   final String password = "Innovation_RgPQAZoA5N";
-  final List<String> topics = ["/innovation/watermonitoring/"];
+  final List<String> topics = ["/innovation/watermonitoring"];
 
   late MqttServerClient _client;
   Function(Map<String, dynamic>)? onMessageReceived;
@@ -67,13 +68,21 @@ class MQTTManager {
     _client.subscribe(topics[0], MqttQos.atLeastOnce);
     _client.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
       final recMess = c[0].payload as MqttPublishMessage;
-      String message =
-          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      String message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
       String decodeMessage = const Utf8Decoder().convert(message.codeUnits);
       print("MQTTClientWrapper:: Decoded message: $decodeMessage");
+
       Map<String, dynamic> messageJson = jsonDecode(decodeMessage);
-      // Move the camera to the fixed position
-      locationService.moveCamera();
+      var gpsData = GPSModel(
+        longitude: double.parse(messageJson['gps_longitude']),
+        latitude: double.parse(messageJson['gps_latitude']),
+      );
+
+      if (onMessageReceived != null) {
+        onMessageReceived!(messageJson);
+      }
+
+      locationService.moveCamera(10.7720803, 106.6553269);
     });
   }
 

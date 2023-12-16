@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ae66eaa3-0ae6-4727-bebe-73e0597a3154" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/android/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/android/gradle.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/macos/Flutter/Flutter-Debug.xcconfig" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/macos/Flutter/Flutter-Debug.xcconfig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/macos/Flutter/Flutter-Release.xcconfig" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/macos/Flutter/Flutter-Release.xcconfig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
