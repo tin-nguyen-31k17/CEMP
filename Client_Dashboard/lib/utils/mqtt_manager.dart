@@ -10,6 +10,7 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:water_monitoring_dashboard/service/location_service.dart';
 import 'package:water_monitoring_dashboard/model/gps_model.dart';
+import 'package:water_monitoring_dashboard/utils/database_helper.dart';
 
 class MQTTManager {
   final String serverUri = "mqttserver.tk";
@@ -18,10 +19,16 @@ class MQTTManager {
   final String username = "innovation";
   final String password = "Innovation_RgPQAZoA5N";
   final List<String> topics = ["/innovation/watermonitoring"];
+  bool _isReconnectScheduled = false;
 
   late MqttServerClient _client;
   Function(Map<String, dynamic>)? onMessageReceived;
   final LocationService locationService;
+
+  Function()? dataUpdateCallback;
+  void setDataUpdateCallback(Function() callback) {
+    dataUpdateCallback = callback;
+  }
 
   MQTTManager({this.onMessageReceived, required this.locationService}) {
     _client = MqttServerClient.withPort(serverUri, clientId, port);
@@ -58,6 +65,13 @@ class MQTTManager {
 
   void _onDisconnected() {
     print('Disconnected from MQTT broker');
+    if (!_isReconnectScheduled) {
+      _isReconnectScheduled = true;
+      Future.delayed(Duration(seconds: 5), () {
+        _isReconnectScheduled = false;
+        connect();
+      });
+    }
   }
 
   void _onSubscribed(String topic) {
@@ -68,21 +82,30 @@ class MQTTManager {
     _client.subscribe(topics[0], MqttQos.atLeastOnce);
     _client.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
       final recMess = c[0].payload as MqttPublishMessage;
-      String message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-      String decodeMessage = const Utf8Decoder().convert(message.codeUnits);
+      final message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      final decodeMessage = const Utf8Decoder().convert(message.codeUnits);
       print("MQTTClientWrapper:: Decoded message: $decodeMessage");
 
-      Map<String, dynamic> messageJson = jsonDecode(decodeMessage);
-      var gpsData = GPSModel(
-        longitude: double.parse(messageJson['gps_longitude']),
-        latitude: double.parse(messageJson['gps_latitude']),
-      );
-
+      final messageJson = jsonDecode(decodeMessage);
       if (onMessageReceived != null) {
         onMessageReceived!(messageJson);
+        if (messageJson['sensors'] is List) {
+          List sensors = messageJson['sensors'];
+          for (var sensor in sensors) {
+            var sensorValue = sensor['sensor_value'];
+            if (sensorValue != null) {
+              var timestamp = DateTime.now().millisecondsSinceEpoch;
+              var value = double.tryParse(sensorValue.toString()) ?? 0.0;
+              DatabaseHelper.instance.insertSensorData(SensorData(
+                timestamp: DateTime.fromMillisecondsSinceEpoch(timestamp),
+                value: value,
+                sensorId: sensor['sensor_id'],
+              ));
+              print("Data inserted: Timestamp - $timestamp, Value - $value");
+            }
+          }
+        }
       }
-
-      locationService.moveCamera(10.7720803, 106.6553269);
     });
   }
 

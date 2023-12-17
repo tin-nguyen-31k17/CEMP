@@ -5,6 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ae66eaa3-0ae6-4727-bebe-73e0597a3154" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../Atom_Node/src/Atom_Node.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../Atom_Node/src/Atom_Node.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/lib/pages/control_view/control_panel_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/lib/pages/control_view/control_panel_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/lib/pages/control_view/history_chart_page.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/lib/utils/mqtt_manager.dart" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/lib/utils/mqtt_manager.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/lib/widgets/custom_appbar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/lib/widgets/custom_appbar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Client_Dashboard/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Client_Dashboard/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../tools/testpub.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../tools/testpub.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

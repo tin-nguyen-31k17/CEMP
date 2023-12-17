@@ -5,4 +5,4 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project.
 */
 
-enum Options { history, setting, analyze, gps }
+enum Options { graph, setting, analyze, gps }

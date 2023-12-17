@@ -20,7 +20,7 @@ import 'package:provider/provider.dart';
 import 'package:water_monitoring_dashboard/model/device_list_model.dart';
 import 'package:water_monitoring_dashboard/model/device_model.dart';
 import 'package:water_monitoring_dashboard/pages/control_view/gps_tracking_page.dart';
-import 'package:water_monitoring_dashboard/pages/control_view/history_chart_page.dart';
+import 'package:water_monitoring_dashboard/pages/control_view/graph_panel_page.dart';
 
 class ControlPanelPage extends StatefulWidget {
   final String tag;
@@ -69,6 +69,27 @@ class _ControlPanelPageState extends State<ControlPanelPage>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('GPS data not available for the selected device')),
+      );
+    }
+  }
+
+void onGraphOptionSelected() {
+    final List<DeviceModel> deviceData =
+        Provider.of<DeviceListModel>(context, listen: false).devices;
+    if (deviceData[widget.selectedDeviceIndex].gps != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GraphPanelPage(
+            deviceData: deviceData,
+            selectedDeviceIndex: widget.selectedDeviceIndex,
+            color: widget.color,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('History data not available for the selected device')),
       );
     }
   }
@@ -152,18 +173,12 @@ class _ControlPanelPageState extends State<ControlPanelPage>
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         OptionWidget(
-          icon: 'assets/svg/clock.svg',
-          isSelected: option == Options.history,
+          icon: 'assets/svg/graph.svg',
+          isSelected: option == Options.graph,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => TimeChartPage(
-                      title: 'Time Chart',
-                      device: devices[widget.selectedDeviceIndex])),
-            );
+            onGraphOptionSelected();
           },
-          size: 32,
+          size: 38,
         ),
         OptionWidget(
           icon: 'assets/svg/control.svg',
@@ -171,7 +186,7 @@ class _ControlPanelPageState extends State<ControlPanelPage>
           onTap: () => setState(() {
             option = Options.setting;
           }),
-          size: 25,
+          size: 28,
         ),
         OptionWidget(
           icon: 'assets/svg/audit.svg',
@@ -179,7 +194,7 @@ class _ControlPanelPageState extends State<ControlPanelPage>
           onTap: () => setState(() {
             option = Options.analyze;
           }),
-          size: 35,
+          size: 34,
         ),
         OptionWidget(
           icon: 'assets/svg/gps.svg',

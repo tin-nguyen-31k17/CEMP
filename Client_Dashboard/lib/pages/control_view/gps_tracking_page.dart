@@ -142,12 +142,12 @@ class _GPSTrackingPageState extends State<GPSTrackingPage> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         OptionWidget(
-          icon: 'assets/svg/clock.svg',
-          isSelected: option == Options.history,
+          icon: 'assets/svg/graph.svg',
+          isSelected: option == Options.graph,
           onTap: () => setState(() {
-            option = Options.history;
+            option = Options.graph;
           }),
-          size: 32,
+          size: 38,
         ),
         OptionWidget(
           icon: 'assets/svg/control.svg',
@@ -156,7 +156,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage> {
             option = Options.setting;
             Navigator.pop(context);
           }),
-          size: 25,
+          size: 28,
         ),
         OptionWidget(
           icon: 'assets/svg/audit.svg',
@@ -164,7 +164,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage> {
           onTap: () => setState(() {
             option = Options.analyze;
           }),
-          size: 35,
+          size: 34,
         ),
         OptionWidget(
           icon: 'assets/svg/gps.svg',

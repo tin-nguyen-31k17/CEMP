@@ -97,10 +97,6 @@ void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* senso
  }
 }
 
-void generateRandomSensorData(float& sensorReading) {
-  sensorReading = random(0, 14);
-}
-
 void generateRandDateTimeGPS() {
   Day = random(1, 31);
   Month = random(1, 13);
@@ -151,25 +147,25 @@ void loop() {
       case 0:
         Serial.println("Reading water EC sensor...");
         // readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
-        generateRandomSensorData(sensorReadings[i]);
+        sensorReadings[i] = random(0, 2000);
         Serial.print("Water EC: ");
         break;
       case 1:
         Serial.println("Reading water PH sensor...");
         // readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
-        generateRandomSensorData(sensorReadings[i]);
+        sensorReadings[i] = random(0, 14);
         Serial.print("Water PH: ");
         break;
       case 2:
         Serial.println("Reading water ORP sensor...");
         // readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
-        generateRandomSensorData(sensorReadings[i]);
+        sensorReadings[i] = random(-2000, 2000);
         Serial.print("Water ORP: ");
         break;
       case 3:
         Serial.println("Reading water temperature sensor...");
         // readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
-        generateRandomSensorData(sensorReadings[i]);
+        sensorReadings[i] = random(0, 100);
         Serial.print("Water Temp: ");
         break;
     }

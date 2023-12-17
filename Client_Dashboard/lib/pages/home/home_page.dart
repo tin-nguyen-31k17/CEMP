@@ -94,7 +94,7 @@ class _HomePageState extends State<HomePage> {
               );
             },
           );
-          device.value = double.parse(sensor['sensor_value']);
+          device.value = double.tryParse(sensor['sensor_value'].toString()) ?? 0.0;
           device.isActive = true;
           print("Updated device: ${device.name}, Value: ${device.value}");
         }
@@ -175,7 +175,7 @@ class _HomePageState extends State<HomePage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "5 devices added",
+                                    "4 devices added",
                                     style: TextStyle(
                                         fontSize: 15,
                                         color: Colors.grey,

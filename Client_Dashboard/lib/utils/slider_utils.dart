@@ -39,3 +39,5 @@ double kMaxDegree(String deviceId) => deviceRanges[deviceId]?[1] ?? 100.0;
 
 String kUnit(String deviceId) => unit[deviceId] ?? 'default_unit';
 String kDeviceName(String deviceId) => '${deviceId.split('_')[0]} Sensor';
+
+double kUnitRange(String deviceId) => kMaxDegree(deviceId) - kMinDegree(deviceId);

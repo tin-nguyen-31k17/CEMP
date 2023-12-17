@@ -7,33 +7,39 @@
 
 import 'package:flutter/material.dart';
 
-class CustomAppBar extends StatelessWidget {
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final bool showBackButton;
 
-  const CustomAppBar({Key? key, required this.title}) : super(key: key);
+  const CustomAppBar({
+    Key? key,
+    required this.title,
+    this.showBackButton = true,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        InkWell(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(
-            Icons.arrow_back_sharp,
-            color: Colors.black,
-            size: 25,
-          ),
+    return AppBar(
+      leading: showBackButton ? InkWell(
+        onTap: () => Navigator.pop(context),
+        child: const Icon(
+          Icons.arrow_back_sharp,
+          color: Colors.black,
+          size: 25,
         ),
-        Text(
-          title,
-          style: const TextStyle(
-              fontSize: 18, color: Colors.black, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(
-          width: 30,
-        ),
-      ],
+      ) : null,
+      title: Text(
+        title,
+        style: const TextStyle(
+            fontSize: 18, color: Colors.black, fontWeight: FontWeight.w500),
+      ),
+      backgroundColor: Colors.transparent, // Make the AppBar background transparent
+      elevation: 0, // Remove shadow
+      centerTitle: true, // Center the title
     );
   }
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight); // Standard AppBar height
 }
+
