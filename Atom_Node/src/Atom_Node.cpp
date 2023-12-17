@@ -106,8 +106,8 @@ void generateRandDateTimeGPS() {
   Second = random(0, 60);
 
   // random float long and lat
-  Lon = random(105.1, 109.9);
-  Lat = random(10.1, 11.9);
+  Lon = random(105.67, 109.87);
+  Lat = random(10.23, 10.98);
 
   dateTime = String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second);
 }

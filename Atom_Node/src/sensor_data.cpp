@@ -54,7 +54,6 @@ String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float 
   Serial.println();
   return jsonString;
 }
-///////////////////////////////////////
 
 SENSOR_RS485::SENSOR_RS485(){
   data_water_ec = new uint8_t[8]{0x04, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x5E};

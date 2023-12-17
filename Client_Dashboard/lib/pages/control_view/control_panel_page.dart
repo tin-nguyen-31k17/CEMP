@@ -63,6 +63,7 @@ class _ControlPanelPageState extends State<ControlPanelPage>
         MaterialPageRoute(
           builder: (context) => GPSTrackingPage(
             deviceData: deviceData,
+            selectedDeviceIndex: widget.selectedDeviceIndex,
           ),
         ),
       );

@@ -11,6 +11,11 @@ import 'package:provider/provider.dart';
 import 'package:rainbow_color/rainbow_color.dart';
 import 'package:animated_background/animated_background.dart';
 
+bool isWideScreen(BuildContext context) {
+  final Size screenSize = MediaQuery.of(context).size;
+  return screenSize.aspectRatio > (16 / 9);
+}
+
 class GraphPanelPage extends StatefulWidget {
   final Color color;
   final int selectedDeviceIndex;
@@ -119,8 +124,11 @@ class _GraphPanelPageState extends State<GraphPanelPage> with TickerProviderStat
     final isNotEmpty = realTimeData.isNotEmpty;
     final minX = isNotEmpty ? realTimeData.map((spot) => spot.x).reduce(math.min).toDouble() : 0;
     final maxX = isNotEmpty ? realTimeData.map((spot) => spot.x).reduce(math.max).toDouble() : 0;
-    final minY = isNotEmpty ? realTimeData.map((spot) => spot.y).reduce(math.min).toDouble() : 0;
-    final maxY = isNotEmpty ? realTimeData.map((spot) => spot.y).reduce(math.max).toDouble() : 0;
+    final minY = kMinDegree(widget.deviceData[widget.selectedDeviceIndex].id).toDouble();
+    final maxY = kMaxDegree(widget.deviceData[widget.selectedDeviceIndex].id).toDouble();
+    final yInterval = (maxY - minY) / 5;
+    final timeInterval = isWideScreen(context) ? 1000 * 60 * 10 : 1000 * 60 * 5; // 10 or 5 minutes
+
     return LineChartData(
       minX: minX as double?,
       maxX: maxX as double?,
@@ -145,7 +153,7 @@ class _GraphPanelPageState extends State<GraphPanelPage> with TickerProviderStat
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
-            interval: 1000 * 60 * 60 * 24,
+            interval: timeInterval.toDouble(),
             getTitlesWidget: (value, meta) {
               final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
               return SideTitleWidget(
@@ -159,6 +167,7 @@ class _GraphPanelPageState extends State<GraphPanelPage> with TickerProviderStat
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
+            interval: yInterval,
             getTitlesWidget: leftTitleWidgets,
           ),
         ),
