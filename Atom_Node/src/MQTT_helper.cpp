@@ -16,17 +16,11 @@ void MyMQTT::connectToMQTT() {
 }
 
 void MyMQTT::subscribe(String feedName) {
-#ifdef ADAFRUIT
-    String topic = user + "/feeds/" + feedName;
-#endif
     String topic = feedName;
     client.subscribe(topic.c_str());
 }
 
 bool MyMQTT::publish(String feedName, String message) {
-#ifdef ADAFRUIT
-    String topic = user + "/feeds/" + feedName;
-#endif
     String topic = feedName;
     Serial.print("Publishing to topic: ");
     Serial.println(feedName);
@@ -48,7 +42,6 @@ void MyMQTT::checkConnect(){
 }
 
 void MyMQTT::callback(char* topic, byte* payload, unsigned int length) {
-    // Your callback implementation here
     Serial.print("Message arrived [");
     Serial.print(topic);
     Serial.print("] ");
@@ -71,4 +64,3 @@ void MyMQTT::reConnect() {
         }
     }
 }
-
