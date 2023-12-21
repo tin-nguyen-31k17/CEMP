@@ -19,14 +19,6 @@ void initVariant() {
   esp_wifi_set_mac(WIFI_IF_AP, &GatewayMac[0]);
 }
 
-void bootLogo() {
-  M5.Displays(0).fillScreen(TFT_SCREEN_BG);
-  M5.Displays(0).setTextColor(TFT_WHITE);
-  M5.Displays(0).drawString("CEMP Mobility Water Monitoring Station", 50, 165);
-  M5.Displays(0).drawPng(logo, sizeof(logo), 100, 40, 120, 120);
-  delay(3000);
-}
-
 void decodeMessage(String message) {
     const size_t capacity = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(5) + 290;
     DynamicJsonDocument doc(capacity);
@@ -64,7 +56,7 @@ void printSDCardInfo() {
     M5.Displays(0).drawString("SD Card Size: " + String(cardSize) + "MB", 160, 100);
     delay(2000);
     M5.Displays(0).drawString("", 160, 100);
-    delay(250);
+    delay(500);
 }
 
 bool isSDCardFull() {
@@ -198,7 +190,7 @@ void setup() {
 
   Serial.print("Connecting to WiFi...");
   M5.Displays(0).drawString("Connecting to " + String(SOFTAP_SSID) + "...", 160, 100);
-  delay(2000);
+  delay(1000);
   M5.Displays(0).drawString("", 160, 100);
   delay(250);
 

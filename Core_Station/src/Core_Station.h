@@ -17,10 +17,12 @@
 
 // #define SOFTAP_SSID "A-Automator"
 // #define SOFTAP_PASS "Cmbuilderx@X"
-#define SOFTAP_SSID "HPCCLAB"
-#define SOFTAP_PASS "hpccw1f1"
+// #define SOFTAP_SSID "HPCCLAB"
+// #define SOFTAP_PASS "hpccw1f1"
 // #define SOFTAP_SSID "Trustin iPhone"
 // #define SOFTAP_PASS "tin1752545"
+#define SOFTAP_SSID "EMC23-Automation"
+#define SOFTAP_PASS "123456789x@X"
 #define SENSOR_COUNT 12
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)
@@ -74,3 +76,4 @@ WiFiMulti wifiMulti;
 // MQTT Server
 MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
 String myTopic = "/innovation/watermonitoring";
+

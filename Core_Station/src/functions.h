@@ -5,42 +5,77 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project.
 */
 
-void viewUI() {
-  M5.Displays(0).setBrightness(brightness);
-  M5.Displays(0).fillScreen(TFT_SCREEN_BG);
+struct IconSize {
+  int width;
+  int height;
+};
 
-  M5.Displays(0).drawPng(EC, sizeof(EC), 16, 16, 64, 64);
-  M5.Displays(0).drawPng(Temp, sizeof(Temp), 16, 160, 64, 64);
-  M5.Displays(0).drawPng(ORP, sizeof(ORP), 176, 160, 65, 65);
-  M5.Displays(0).drawPng(pH, sizeof(pH), 176, 16, 64, 64);
+struct IconPosition {
+  int x;
+  int y;
+};
 
-  M5.Displays(0).fillRect(16 + 64 * 0.05 + 8 * 0.05, 118, 64, 10, TFT_GREEN);
-  M5.Displays(0).fillRect(16 + 64 * 1.05 + 8 * 1.05, 118, 64, 10, TFT_YELLOW);
-  M5.Displays(0).fillRect(16 + 64 * 2.05 + 8 * 2.05, 118, 64, 10, TFT_ORANGE);
-  M5.Displays(0).fillRect(16 + 64 * 3.05 + 8 * 3.05, 118, 64, 10, TFT_RED);
+const IconPosition iconPositions[] = {
+  {16, 16},    // EC
+  {16, 160},   // Temperature
+  {176, 160},  // ORP
+  {176, 16}    // pH
+};
 
-  M5.Displays(0).setFont(&arial6pt7b);
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).setTextDatum(CC_DATUM);
-  M5.Displays(0).setTextPadding(20);
+const IconSize iconSizes[] = {
+  {64, 64},    // EC
+  {64, 64},    // Temperature
+  {65, 65},    // ORP
+  {64, 64}     // pH
+};
 
-  M5.Displays(0).drawString("GOOD", 51, 138);
-  M5.Displays(0).drawString("OK", 156, 138);
-  M5.Displays(0).drawString("BAD", 266, 138);
+struct IconData {
+  const unsigned char* onImage;
+  const unsigned char* offImage;
+  bool state;
+};
 
-  M5.Displays(0).setTextDatum(CL_DATUM);
-  M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Water EC", 90, 24);
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Water pH", 248, 24);
-  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Water Temp", 90, 168);
-  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  M5.Displays(0).drawString("Water ORP", 248, 168);
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+IconData icons[] = {
+  {EC, EC_off, true},
+  {Temp, Temp_off, true},
+  {ORP, ORP_off, true},
+  {pH, pH_off, true}
+};
 
-  // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
-  M5.Displays(0).drawString("V" + String(VERSION), 280, 232);
+void toggleIcon(int iconIndex) {
+  IconData& icon = icons[iconIndex];
+  icon.state = !icon.state;
+
+  const IconPosition& pos = iconPositions[iconIndex];
+  const IconSize& size = iconSizes[iconIndex];
+  M5.Lcd.fillRect(pos.x, pos.y, size.width, size.height, TFT_SCREEN_BG);
+  M5.Lcd.drawPng(icon.state ? icon.onImage : icon.offImage, sizeof(pH), pos.x, pos.y, size.width, size.height);
+}
+
+void button(void* pvParameters) {
+  for (;;) {
+    M5.update();
+    auto touchDetails = M5.Touch.getDetail();
+      for (int i = 0; i < 4; ++i) {
+        const IconPosition& pos = iconPositions[i];
+        const IconSize& size = iconSizes[i];
+        if (touchDetails.state == 1 && 
+          touchDetails.x >= pos.x && touchDetails.x <= pos.x + size.width && 
+          touchDetails.y >= pos.y && touchDetails.y <= pos.y + size.height) {
+          toggleIcon(i);
+          break;
+        }
+      }
+    vTaskDelay(pdMS_TO_TICKS(20));
+  }
+}
+
+void bootLogo() {
+    M5.Lcd.fillScreen(TFT_SCREEN_BG);
+    M5.Lcd.setTextColor(TFT_WHITE);
+    M5.Lcd.drawString("CEMP Mobility Water Monitoring Station", 50, 165);
+    M5.Lcd.drawPng(logo, sizeof(logo), 100, 40, 120, 120);
+    delay(3000);
 }
 
 // View battery
@@ -92,33 +127,17 @@ void initLed() {
 }
 
 void initPhysical() {
-  // Init Display
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
   M5.Displays(0).setTextDatum(CC_DATUM);
   M5.Displays(0).setTextPadding(180);
 
-#if BOARD != CORES3
-  for (uint8_t i = 0; i < 5; i++) {
-    leds[4 - i] = CRGB::DarkBlue;
-    leds[5 + i] = CRGB::DarkBlue;
-
-    FastLED.setBrightness(16);
-    FastLED.show();
-
-    M5.Displays(0).drawString("Please wait! Initializing...", 160, 100);
-    delay(1000);
-    M5.Displays(0).drawString("", 160, 100);
-    delay(500);
-  }
-#else
   for (uint8_t i = 0; i < 5; i++) {
     M5.Displays(0).drawString("Please wait! Initializing...", 160, 100);
     delay(1000);
     M5.Displays(0).drawString("", 160, 100);
     delay(500);
   }
-#endif
 }
 
 void fadeall() {
@@ -137,7 +156,6 @@ void led(void *pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(50));
     }
 
-    // Now go in the other direction
     for (uint8_t i = 0; i < NUM_LEDS; i++) {
       leds[(NUM_LEDS)-1 - i] = m5goColor;
       ;
@@ -148,144 +166,111 @@ void led(void *pvParameters) {
   }
 }
 
-// Check button
-void button(void *pvParameters) {
-  uint8_t step = 2;
-  uint8_t min  = 4;
-  uint8_t max  = 255;
+// Function to convert CRGB to a format compatible with LGFX (e.g., rgb565_t)
+lgfx::v1::rgb565_t convertCRGBtoRGB565(const CRGB& color) {
+    // Extract individual color components from CRGB
+    uint8_t red = color.red;
+    uint8_t green = color.green;
+    uint8_t blue = color.blue;
 
-  uint8_t btnA = 0;
-  uint8_t btnB = 0;
-  uint8_t btnC = 0;
-
-  uint16_t brightnessOld = 0;
-
-  struct Button {
-    char name[16];   // name
-    int x;           // x
-    int y;           // y
-    int w;           // width
-    int h;           // height
-    int d;           // distance
-    boolean active;  // active, if true, check this button, else bypass
-    boolean read;    // read, if true, button is push, else false
-  };
-
-#if BOARD == CORES3
-  Button myBtn[] = {
-    {"myBtnA", 0, 160, 100, 80, 1000, true, false},
-    {"myBtnB", 110, 160, 100, 80, 1000, true, false},
-    {"myBtnC", 220, 160, 100, 80, 1000, true, false},
-  };
-#else
-  Button myBtn[] = {
-    {"myBtnA", 0, 240, 100, 80, 1000, true, false},
-    {"myBtnB", 110, 240, 100, 80, 1000, true, false},
-    {"myBtnC", 220, 240, 100, 80, 1000, true, false},
-  };
-#endif
-
-  for (;;) {
-    M5.update();
-
-    if (M5.getBoard() == m5::board_t::board_M5Stack || M5.getBoard() == m5::board_t::board_M5StackCore2) {
-      step = 4;
-      min  = 4;
-      max  = 255;
-
-      btnA = M5.BtnA.isPressed();
-      btnB = M5.BtnB.isPressed();
-      btnC = M5.BtnC.isPressed();
-    } else if (M5.getBoard() == m5::board_t::board_M5StackCoreS3) {
-      step = 16;
-      min  = 64;
-      max  = 255;
-
-      auto t = M5.Touch.getDetail();
-      auto c = M5.Touch.getCount();
-
-      uint8_t limit = sizeof myBtn / sizeof myBtn[0];
-
-      int distanceBtn     = 0;
-      int distanceMin     = 1000;
-      int distanceCurrent = 1000;
-
-      if (c == 1) {
-        for (uint8_t i = 0; i < limit; i++) {
-          myBtn[i].read = false;
-          if (myBtn[i].active == true) {
-            distanceCurrent = (int)(sqrt(pow(t.x - (myBtn[i].x + (myBtn[i].w / 2)), 2) +
-                                         pow(t.y - (myBtn[i].y + (myBtn[i].h / 2)), 2)));
-            myBtn[i].d      = distanceCurrent;
-            if (distanceCurrent < distanceMin) {
-              distanceMin = distanceCurrent;
-              distanceBtn = i;
-            }
-          }
-        }
-
-        if (t.state == 1 || t.state == 3 || t.state == 5) {
-          myBtn[distanceBtn].read = true;
-        }
-      }
-
-      btnA = myBtn[0].read;
-      btnB = myBtn[1].read;
-      btnC = myBtn[2].read;
-    }
-
-    if (btnA || btnC) {
-      if (M5.getBoard() == m5::board_t::board_M5StackCoreS3) {
-        vTaskDelay(pdMS_TO_TICKS(100));
-      }
-
-      brightnessOld = brightness;
-
-      if (btnA) {
-        brightnessOld -= step;
-        brightnessOld = (brightnessOld <= min) ? min : brightnessOld;
-      } else if (btnC) {
-        brightnessOld += step;
-        brightnessOld = (brightnessOld >= max) ? max : brightnessOld;
-      }
-
-      if (brightnessOld != brightness) {
-        brightness = brightnessOld;
-        M5.Displays(0).setBrightness(brightness);
-        preferences.putUInt("brightness", brightness);
-        Serial.println(brightness);
-      }
-    }
-
-    vTaskDelay(pdMS_TO_TICKS(20));
-  }
+    // Convert to RGB565 format
+    uint16_t rgb565 = ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
+    return lgfx::v1::rgb565_t(rgb565);
 }
 
-// Check water quality
+const char* waterQualityMessages[] = {
+    "Excellent - Potable, fit for human consumption",
+    "Very Good - Suitable for sensitive aquatic species",
+    "Good - Suitable for livestock, irrigation",
+    "Moderate - Caution advised, possible contaminants",
+    "Poor - Not suitable for direct consumption",
+    "Very Poor - Risky for all living organisms",
+    "Extremely Dangerous - Toxic, do not consume or use"
+};
+
+// Calculate weighted sum based on normalized sensor readings
+float calculateWeightedSum(float normalizedEC, float normalizedpH, float normalizedORP, float normalizedTemp) {
+    return 0.4 * normalizedEC + 0.2 * normalizedpH + 0.2 * normalizedORP + 0.2 * normalizedTemp;
+}
+
+// Determine the quality level based on weighted sum
+int determineQualityLevel(float weightedSum) {
+    return static_cast<int>(weightedSum * 7);
+}
+
+// Display the water quality message on the screen
+void displayWaterQualityMessage(int qualityLevel) {
+    M5.Displays(0).drawString(waterQualityMessages[qualityLevel], 18, 138);
+}
+
+// Draw the color-coded indicator on a ruler
+void drawQualityIndicator(int qualityLevel) {
+    CRGB color;
+    switch (qualityLevel) {
+        case 0: color = CRGB::Green; break;
+        case 1: color = CRGB::GreenYellow; break;
+        case 2: color = CRGB::Yellow; break;
+        case 3: color = CRGB::Orange; break;
+        case 4: color = CRGB::DarkOrange; break;
+        case 5: color = CRGB::Red; break;
+        default: color = CRGB::DarkRed; break;
+    }
+    // Convert CRGB to RGB565
+    lgfx::v1::rgb565_t convertedColor = convertCRGBtoRGB565(color);
+
+    // Use the converted color with LGFX functions
+    M5.Displays(0).fillRect(16 + 64 * qualityLevel, 108, 64, 2, convertedColor);
+}
+
+// Main function to check water quality
 void checkWaterQuality(float EC, float pH, float ORP, float Temp) {
-  // Normalize the sensor values to range from 0 to 1
-  float normalizedEC = EC / 2000;
-  float normalizedpH = (14 - pH) / 14; // assuming neutral pH is best
-  float normalizedORP = (ORP + 2000) / 4000; // assuming higher ORP is better
-  float normalizedTemp = (60 - Temp) / 60; // assuming lower temperature is better
+    // Normalize sensor values
+    float normalizedEC = EC / 2000;
+    float normalizedpH = (14 - pH) / 14;
+    float normalizedORP = (ORP + 2000) / 4000;
+    float normalizedTemp = (60 - Temp) / 60;
+    
+    // Calculate weighted sum and determine quality level
+    float weightedSum = calculateWeightedSum(normalizedEC, normalizedpH, normalizedORP, normalizedTemp);
+    int qualityLevel = determineQualityLevel(weightedSum);
 
-  // Calculate a weighted sum of the sensor values
-  float weightedSum = 0.4 * normalizedEC + 0.2 * normalizedpH + 0.2 * normalizedORP + 0.2 * normalizedTemp;
+    // Display results
+    displayWaterQualityMessage(qualityLevel);
+    drawQualityIndicator(qualityLevel);
+}
 
-  // Check the water quality based on the weighted sum
-  if (weightedSum < 0.25) {
-    M5.Displays(0).fillRect(16 + 64 * 0.05 + 8 * 0.05, 108, 64, 2, TFT_WHITE);
-    m5goColor = CRGB::Green;
-  } else if (weightedSum < 0.5) {
-    M5.Displays(0).fillRect(16 + 64 * 1.05 + 8 * 1.05, 108, 64, 2, TFT_WHITE);
-    m5goColor = CRGB::Yellow;
-  } else if (weightedSum < 0.75) {
-    M5.Displays(0).fillRect(16 + 64 * 2.05 + 8 * 2.05, 108, 64, 2, TFT_WHITE);
-    m5goColor = CRGB::Orange;
-  } else {
-    M5.Displays(0).fillRect(16 + 64 * 3.05 + 8 * 3.05, 108, 64, 2, TFT_WHITE);
-    m5goColor = CRGB::Red;
-  }
+void viewUI() {
+  M5.Displays(0).setBrightness(brightness);
+  M5.Displays(0).fillScreen(TFT_SCREEN_BG);
+
+  M5.Displays(0).drawPng(EC, sizeof(EC), 16, 16, 64, 64);
+  M5.Displays(0).drawPng(Temp, sizeof(Temp), 16, 160, 64, 64);
+  M5.Displays(0).drawPng(ORP, sizeof(ORP), 176, 160, 65, 65);
+  M5.Displays(0).drawPng(pH, sizeof(pH), 176, 16, 64, 64);
+
+  M5.Displays(0).fillRect(16 + 64 * 0.05 + 8 * 0.05, 118, 64, 10, TFT_GREEN);
+  M5.Displays(0).fillRect(16 + 64 * 1.05 + 8 * 1.05, 118, 64, 10, TFT_YELLOW);
+  M5.Displays(0).fillRect(16 + 64 * 2.05 + 8 * 2.05, 118, 64, 10, TFT_ORANGE);
+  M5.Displays(0).fillRect(16 + 64 * 3.05 + 8 * 3.05, 118, 64, 10, TFT_RED);
+
+  M5.Displays(0).setFont(&arial6pt7b);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).setTextDatum(CC_DATUM);
+  M5.Displays(0).setTextPadding(20);
+
+  M5.Displays(0).setTextDatum(CL_DATUM);
+  M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
+  M5.Displays(0).drawString("Water EC", 90, 24);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).drawString("Water pH", 248, 24);
+  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
+  M5.Displays(0).drawString("Water Temp", 90, 168);
+  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+  M5.Displays(0).drawString("Water ORP", 248, 168);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+
+  // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
+  M5.Displays(0).drawString("V" + String(VERSION), 280, 232);
 }
 
 // Detail for each range of `weightedSum`:
