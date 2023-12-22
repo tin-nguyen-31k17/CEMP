@@ -35,13 +35,13 @@ HardwareSerial ss(1);
 uint8_t Gateway_Mac[] = {0x02, 0x10, 0x11, 0x12, 0x13, 0x14};
 volatile boolean messageSent;
 uint8_t receivedData[9];
-uint8_t dataToSend[SENSOR_COUNT*3] = {0}; // Array to send sensor readings
+uint8_t dataToSend[SENSOR_COUNT*3] = {0};
 float sensorReadings[SENSOR_COUNT] = {0};
 uint8_t Lon, Lat, Day, Month, Year, Hour, Minute, Second;
 String dateTime;
 
-MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N");
 String myTopic = "/innovation/watermonitoring";
+SENSOR_DATA sensorData;
 
 TinyGsm modem(SerialAT);
 
@@ -53,3 +53,6 @@ const char gprsPass[] = "";
 
 int failedSendCount = 0;
 int MAX_FAILED_SENDS =3;
+
+bool isLTEInitialized = false;
+MyMQTT myMQTT("mqttserver.tk", "innovation", "Innovation_RgPQAZoA5N", tcpClient, modem);

@@ -231,14 +231,11 @@ void loop() {
         myMQTT.subscribe(myTopic);
         Serial.println("Subscribed to topic: " + myTopic);
         Serial.println("Sending message...");
-        String messageToSend;
-        for (int i = 0; i < SENSOR_COUNT; i++) {
-          messageToSend += String(dataToSend[i], HEX);
-          messageToSend += ", ";
-      }
-      myMQTT.publish(myTopic, messageToSend);
-      Serial.println("Message sent successfully via DTU LTE module!");
-      failedSendCount = 0;
+        String dataToPub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], Lon, Lat);
+        if (myMQTT.publish(myTopic, dataToPub)) {
+          Serial.println("Message sent successfully via DTU LTE module!");
+          failedSendCount = 0;
+        }
       }
     }
   });
