@@ -20,17 +20,28 @@ void initVariant() {
 }
 
 void decodeMessage(String message) {
+    if (message.isEmpty()) {
+        Serial.println("Empty MQTT message received.");
+        return;
+    }
+
     const size_t capacity = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(5) + 290;
     DynamicJsonDocument doc(capacity);
 
-    deserializeJson(doc, message);
+    DeserializationError error = deserializeJson(doc, message);
+    if (error) {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        return;
+    }
 
-    const char* station_id = doc["station_id"]; 
-    const char* station_name = doc["station_name"]; 
-    receivedData[4] = doc["gps_longitude"].as<float>(); 
-    receivedData[5] = doc["gps_latitude"].as<float>(); 
+    JsonObject data = doc["data"];
+    const char* station_id = data["station_id"]; 
+    const char* station_name = data["station_name"]; 
+    receivedData[4] = data["gps_longitude"].as<float>(); 
+    receivedData[5] = data["gps_latitude"].as<float>(); 
 
-    JsonArray sensors = doc["sensors"];
+    JsonArray sensors = data["sensors"];
     for(JsonVariant v : sensors) {
       String sensor_id = v["sensor_id"].as<String>(); 
       const char* sensor_name = v["sensor_name"]; 
@@ -298,6 +309,7 @@ void loop() {
   Serial.println(messageReceived);
   if (!messageReceived) {
     // No message received from ESP-NOW, get message from MQTT server
+    Serial.println("No message received from ESP-NOW, get message from MQTT server");
     String mqttMessage = myMQTT.getMessage();
     decodeMessage(mqttMessage);
     Serial.println(mqttMessage);
@@ -306,7 +318,16 @@ void loop() {
     data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
     myMQTT.publish(myTopic, data_to_pub);
     }
-  messageReceived = false;  // Reset the flag
+  messageReceived = false;
+  Serial.println("EC: " + String(EC) + " mS/cm");
+  Serial.println("pH: " + String(pH));
+  Serial.println("ORP: " + String(ORP) + " mV");
+  Serial.println("Temp: " + String(Temp) + " oC");
+  Serial.println("Lon: " + String(float(Lon)));
+  Serial.println("Lat: " + String(float(Lat)));
+  Serial.println("DateTime: " + String(Day) + "/" + String(Month) 
+              + "/" + "20" + String(Year) + " " + String(Hour) 
+              + ":" + String(Minute) + ":" + String(Second));
 
   M5.Displays(0).setFont(&arial6pt7b);
   M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);

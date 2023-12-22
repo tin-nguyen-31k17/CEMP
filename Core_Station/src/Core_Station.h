@@ -21,8 +21,10 @@
 // #define SOFTAP_PASS "hpccw1f1"
 // #define SOFTAP_SSID "Trustin iPhone"
 // #define SOFTAP_PASS "tin1752545"
-#define SOFTAP_SSID "EMC23-Automation"
-#define SOFTAP_PASS "123456789x@X"
+// #define SOFTAP_SSID "EMC23-Automation"
+// #define SOFTAP_PASS "123456789x@X"
+#define SOFTAP_SSID "cce_hocvien"
+#define SOFTAP_PASS "0902449198"
 #define SENSOR_COUNT 12
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)
