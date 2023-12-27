@@ -283,127 +283,130 @@ void setup() {
 }
 
 void loop() {
-  viewUI();
+  // Check and toggle the display state
+  toggleDisplay();
 
-  viewBattery();
-
-  float EC, pH, Temp, ORP;
-  EC = receivedData[0];
-  pH = receivedData[1];
-  Temp = receivedData[3];
-  ORP = receivedData[2];
-  Lon = receivedData[4];
-  Lat = receivedData[5];
-  Day = receivedData[6];
-  Month = receivedData[7];
-  Year = receivedData[8];
-  Hour = receivedData[9];
-  Minute = receivedData[10];
-  Second = receivedData[11];
-  dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) 
-              + "/" + "20" + String(Year) + " " + String(Hour) 
-              + ":" + String(Minute) + ":" + String(Second) 
-              + " GPS: " + String(float(Lon)) 
-              + ":" + String(float(Lat));
-
-  Serial.println(messageReceived);
+  // Process received data regardless of the display state
   if (!messageReceived) {
-    // No message received from ESP-NOW, get message from MQTT server
-    Serial.println("No message received from ESP-NOW, get message from MQTT server");
     String mqttMessage = myMQTT.getMessage();
-    decodeMessage(mqttMessage);
-    Serial.println(mqttMessage);
-  } else {
-    String data_to_pub;
-    data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
-    myMQTT.publish(myTopic, data_to_pub);
+    if (!mqttMessage.isEmpty()) {
+      decodeMessage(mqttMessage);
     }
-  messageReceived = false;
-  Serial.println("EC: " + String(EC) + " mS/cm");
-  Serial.println("pH: " + String(pH));
-  Serial.println("ORP: " + String(ORP) + " mV");
-  Serial.println("Temp: " + String(Temp) + " oC");
-  Serial.println("Lon: " + String(float(Lon)));
-  Serial.println("Lat: " + String(float(Lat)));
-  Serial.println("DateTime: " + String(Day) + "/" + String(Month) 
-              + "/" + "20" + String(Year) + " " + String(Hour) 
-              + ":" + String(Minute) + ":" + String(Second));
-
-  M5.Displays(0).setFont(&arial6pt7b);
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).setTextDatum(CC_DATUM);
-  M5.Displays(0).setTextPadding(20);
-  M5.Displays(0).drawString(dateTimeGPS, 160, 96);
-
-  M5.Displays(0).setFont(&digital_7__mono_24pt7b);
-  M5.Displays(0).setTextDatum(CL_DATUM);
-  M5.Displays(0).setTextPadding(40);
-  if (EC > 19 || EC < 9) {
-    M5.Displays(0).drawString(String(int(EC)), 90, 50);
   } else {
-    M5.Displays(0).drawString(String(int(EC)), 80, 50);
-  }
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  if (pH > 19 || pH < 9) {
-    M5.Displays(0).drawString(String(int(pH)), 248, 50);
-  } else {
-    M5.Displays(0).drawString(String(int(pH)), 244, 50);
-  }
-  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-  if (Temp > 19 || Temp < 9) {
-    M5.Displays(0).drawString(String(int(Temp)), 90, 195);
-  } else {
-    M5.Displays(0).drawString(String(int(Temp)), 80, 195);
-  }
-  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  if (ORP < 9 || ORP > 19) {
-    M5.Displays(0).drawString(String(int(ORP)), 248, 195);
-  } else {
-    M5.Displays(0).drawString(String(int(ORP)), 244, 195);
+    String data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
+    myMQTT.publish(myTopic, data_to_pub);
+    messageReceived = false;
   }
 
-  M5.Displays(0).setFont(&arial6pt7b);
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  M5.Displays(0).setTextDatum(CL_DATUM);
-  M5.Displays(0).setTextPadding(0);
+  // Only update the UI and perform sensor-related tasks if the display is on
+  if (displayState) {
+    viewUI();
+    viewBattery();
 
-  M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-  if (EC > 9) {
-    M5.Displays(0).drawString("mS/cm", 135, 63);
+    // Retrieve sensor data and update display
+    EC = receivedData[0];
+    pH = receivedData[1];
+    Temp = receivedData[3];
+    ORP = receivedData[2];
+    Lon = receivedData[4];
+    Lat = receivedData[5];
+    Day = receivedData[6];
+    Month = receivedData[7];
+    Year = receivedData[8];
+    Hour = receivedData[9];
+    Minute = receivedData[10];
+    Second = receivedData[11];
+    dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) 
+                + "/" + "20" + String(Year) + " " + String(Hour) 
+                + ":" + String(Minute) + ":" + String(Second) 
+                + " GPS: " + String(float(Lon)) 
+                + ":" + String(float(Lat));
+
+    Serial.println("EC: " + String(EC) + " mS/cm");
+    Serial.println("pH: " + String(pH));
+    Serial.println("ORP: " + String(ORP) + " mV");
+    Serial.println("Temp: " + String(Temp) + " oC");
+    Serial.println("Lon: " + String(float(Lon)));
+    Serial.println("Lat: " + String(float(Lat)));
+    Serial.println("DateTime: " + String(Day) + "/" + String(Month) 
+                + "/" + "20" + String(Year) + " " + String(Hour) 
+                + ":" + String(Minute) + ":" + String(Second));
+
+    M5.Displays(0).setFont(&arial6pt7b);
+    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+    M5.Displays(0).setTextDatum(CC_DATUM);
+    M5.Displays(0).setTextPadding(20);
+    M5.Displays(0).drawString(dateTimeGPS, 160, 96);
+
+    M5.Displays(0).setFont(&digital_7__mono_24pt7b);
+    M5.Displays(0).setTextDatum(CL_DATUM);
+    M5.Displays(0).setTextPadding(40);
+    if (EC > 19 || EC < 9) {
+      M5.Displays(0).drawString(String(int(EC)), 90, 50);
+    } else {
+      M5.Displays(0).drawString(String(int(EC)), 80, 50);
+    }
+    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+    if (pH > 19 || pH < 9) {
+      M5.Displays(0).drawString(String(int(pH)), 248, 50);
+    } else {
+      M5.Displays(0).drawString(String(int(pH)), 244, 50);
+    }
+    M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
+    if (Temp > 19 || Temp < 9) {
+      M5.Displays(0).drawString(String(int(Temp)), 90, 195);
+    } else {
+      M5.Displays(0).drawString(String(int(Temp)), 80, 195);
+    }
+    M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+    if (ORP < 9 || ORP > 19) {
+      M5.Displays(0).drawString(String(int(ORP)), 248, 195);
+    } else {
+      M5.Displays(0).drawString(String(int(ORP)), 244, 195);
+    }
+
+    M5.Displays(0).setFont(&arial6pt7b);
+    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+    M5.Displays(0).setTextDatum(CL_DATUM);
+    M5.Displays(0).setTextPadding(0);
+
+    M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
+    if (EC > 9) {
+      M5.Displays(0).drawString("mS/cm", 135, 63);
+    }
+    if (EC > 99) {
+      M5.Displays(0).drawString("mS/cm", 145, 63);
+    } else {
+      M5.Displays(0).drawString("mS/cm", 125, 63);
+    }
+
+    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+    if (pH < 10) {
+      M5.Displays(0).drawString("pH", 285, 63);
+    } else {
+      M5.Displays(0).drawString("pH", 295, 63);
+    }
+
+    M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
+    if (Temp < 20) {
+      M5.Displays(0).drawString("o", 120, 185);
+      M5.Displays(0).drawString("C", 128, 190);
+    } else {
+      M5.Displays(0).drawString("o", 140, 185);
+      M5.Displays(0).drawString("C", 148, 190);
+    }
+
+    M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+    if (ORP < 100) {
+      M5.Displays(0).drawString("mV", 292, 208);
+    } else {
+      M5.Displays(0).drawString("mV", 292, 218);
+    }
+
+    M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
+
+    checkWaterQuality(EC, pH, Temp, ORP);
   }
-  if (EC > 99) {
-    M5.Displays(0).drawString("mS/cm", 145, 63);
-  } else {
-    M5.Displays(0).drawString("mS/cm", 125, 63);
-  }
-
-  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-  if (pH < 10) {
-    M5.Displays(0).drawString("pH", 285, 63);
-  } else {
-    M5.Displays(0).drawString("pH", 295, 63);
-  }
-
-  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-  if (Temp < 20) {
-    M5.Displays(0).drawString("o", 120, 185);
-    M5.Displays(0).drawString("C", 128, 190);
-  } else {
-    M5.Displays(0).drawString("o", 140, 185);
-    M5.Displays(0).drawString("C", 148, 190);
-  }
-
-  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-  if (ORP < 100) {
-    M5.Displays(0).drawString("mV", 292, 208);
-  } else {
-    M5.Displays(0).drawString("mV", 292, 218);
-  }
-
-  M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
-
-  checkWaterQuality(EC, pH, Temp, ORP);
-
   delay(10000);
   myMQTT.checkConnect();
   M5.update();

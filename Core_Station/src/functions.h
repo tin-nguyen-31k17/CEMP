@@ -5,6 +5,8 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project.
 */
 
+bool displayState = true; // Variable to keep track of the display's state
+
 struct IconSize {
   int width;
   int height;
@@ -178,6 +180,7 @@ lgfx::v1::rgb565_t convertCRGBtoRGB565(const CRGB& color) {
     return lgfx::v1::rgb565_t(rgb565);
 }
 
+// Water quality messages based on WQI
 const char* waterQualityMessages[] = {
     "Excellent - Potable, fit for human consumption",
     "Very Good - Suitable for sensitive aquatic species",
@@ -188,19 +191,49 @@ const char* waterQualityMessages[] = {
     "Extremely Dangerous - Toxic, do not consume or use"
 };
 
-// Calculate weighted sum based on normalized sensor readings
-float calculateWeightedSum(float normalizedEC, float normalizedpH, float normalizedORP, float normalizedTemp) {
-    return 0.4 * normalizedEC + 0.2 * normalizedpH + 0.2 * normalizedORP + 0.2 * normalizedTemp;
+// Normalize the sensor values
+float normalizeSensorValue(float value, float minRange, float maxRange) {
+    return (value - minRange) / (maxRange - minRange);
 }
 
-// Determine the quality level based on weighted sum
-int determineQualityLevel(float weightedSum) {
-    return static_cast<int>(weightedSum * 7);
+// Calculate modified WQI
+float calculateModifiedWQI(float normalizedEC, float normalizedpH, float normalizedORP, float normalizedTemp) {
+    // Assign weights based on the significance of each parameter in water quality
+    float weightEC = 0.25;
+    float weightpH = 0.25;
+    float weightORP = 0.25;
+    float weightTemp = 0.25;
+
+    // Calculate modified WQI
+    return (normalizedEC * weightEC + normalizedpH * weightpH + normalizedORP * weightORP + normalizedTemp * weightTemp) * 100;
 }
 
-// Display the water quality message on the screen
-void displayWaterQualityMessage(int qualityLevel) {
-    M5.Displays(0).drawString(waterQualityMessages[qualityLevel], 18, 138);
+// Determine the water quality level based on WQI
+int determineQualityLevel(float wqi) {
+    if (wqi >= 90) return 0; // Excellent
+    if (wqi >= 70) return 1; // Very Good
+    if (wqi >= 50) return 2; // Good
+    if (wqi >= 30) return 3; // Moderate
+    if (wqi >= 15) return 4; // Poor
+    if (wqi >= 5) return 5;  // Very Poor
+    return 6;                // Extremely Dangerous
+}
+
+// Main function to check water quality
+void checkWaterQuality(float EC, float pH, float ORP, float Temp) {
+    // Normalize sensor values using standard ranges (these ranges may need to be adjusted)
+    float normalizedEC = normalizeSensorValue(EC, 0, 2000);
+    float normalizedpH = normalizeSensorValue(pH, 6, 9); // Normal pH range for natural water
+    float normalizedORP = normalizeSensorValue(ORP, -2000, 2000);
+    float normalizedTemp = normalizeSensorValue(Temp, 0, 60); // Assuming 60°C as the upper limit for natural water
+
+    // Calculate modified WQI
+    float wqi = calculateModifiedWQI(normalizedEC, normalizedpH, normalizedORP, normalizedTemp);
+
+    // Determine quality level and display results
+    int qualityLevel = determineQualityLevel(wqi);
+    displayWaterQualityMessage(qualityLevel);
+    drawQualityIndicator(qualityLevel);
 }
 
 // Draw the color-coded indicator on a ruler
@@ -220,23 +253,6 @@ void drawQualityIndicator(int qualityLevel) {
 
     // Use the converted color with LGFX functions
     M5.Displays(0).fillRect(16 + 64 * qualityLevel, 108, 64, 2, convertedColor);
-}
-
-// Main function to check water quality
-void checkWaterQuality(float EC, float pH, float ORP, float Temp) {
-    // Normalize sensor values
-    float normalizedEC = EC / 2000;
-    float normalizedpH = (14 - pH) / 14;
-    float normalizedORP = (ORP + 2000) / 4000;
-    float normalizedTemp = (60 - Temp) / 60;
-    
-    // Calculate weighted sum and determine quality level
-    float weightedSum = calculateWeightedSum(normalizedEC, normalizedpH, normalizedORP, normalizedTemp);
-    int qualityLevel = determineQualityLevel(weightedSum);
-
-    // Display results
-    displayWaterQualityMessage(qualityLevel);
-    drawQualityIndicator(qualityLevel);
 }
 
 void viewUI() {
@@ -271,6 +287,21 @@ void viewUI() {
 
   // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
   M5.Displays(0).drawString("V" + String(VERSION), 280, 232);
+}
+
+void toggleDisplay() {
+    // Check if the power button is pressed
+    if (M5.BtnPwr.wasPressed()) {
+        displayState = !displayState; // Toggle the display state
+        if (displayState) {
+            // Turn on the display and restore the UI state
+            M5.display(true);
+            viewUI(); // Call viewUI() to restore the UI state
+        } else {
+            // Turn off the display
+            M5.display(false);
+        }
+    }
 }
 
 // Detail for each range of `weightedSum`:
