@@ -8,7 +8,6 @@
 #include "MQTT_helper.h"
 
 void MyMQTT::connectToMQTT() {
-    // Check network status before attempting MQTT connection
     if (!WiFi.isConnected()) {
         Serial.println("WiFi not connected. Unable to connect to MQTT.");
         return;
@@ -27,8 +26,6 @@ void MyMQTT::reConnect() {
     while (!client.connected()) {
         Serial.print("Attempting MQTT connection...");
 
-        // Using IP address instead of domain name for server
-        //103.116.104.204
         IPAddress serverIP(103, 116, 104, 204);
         client.setServer(serverIP, 1883);
 
@@ -49,36 +46,6 @@ void MyMQTT::subscribe(String feedName) {
     client.subscribe(topic.c_str());
 }
 
-// bool MyMQTT::publish(String feedName, String message) {
-//     String topic = feedName;
-//     Serial.print("Publishing to topic: ");
-//     Serial.println(feedName);
-//     Serial.print("Status: ");
-//     if(client.publish(topic.c_str(), message.c_str(),1)){
-//       Serial.println("Success!");
-//       return 1;
-//     }
-//     Serial.println("Failed!");
-//     return 0;
-// }
-
-// bool MyMQTT::publish(String feedName, String message) {
-//     String topic = feedName;
-//     Serial.print("Publishing to topic: ");
-//     Serial.println(feedName);
-//     Serial.print("Status: ");
-
-//     // Convert message to JSON format for efficiency
-//     String jsonMessage = "{\"data\":\"" + message + "\"}";
-
-//     if(client.publish(topic.c_str(), jsonMessage.c_str(), true)) {
-//         Serial.println("Success!");
-//         return true;
-//     }
-//     Serial.println("Failed!");
-//     return false;
-// }
-
 bool MyMQTT::isValidJson(String json) {
     DynamicJsonDocument doc(1024);
     DeserializationError error = deserializeJson(doc, json);
@@ -89,36 +56,6 @@ bool MyMQTT::isValidJson(String json) {
     }
     return true;
 }
-
-// bool MyMQTT::publish(String feedName, String message) {
-//     String topic = feedName;
-//     String jsonMessage = "{\"data\":" + message + "}";
-//     Serial.print("Publishing to topic: ");
-//     Serial.println(topic);
-//     Serial.print("Payload size: ");
-//     Serial.println(jsonMessage.length());
-//     int MAX_PAYLOAD_SIZE = 1024;
-
-//     if (jsonMessage.length() > MAX_PAYLOAD_SIZE) {
-//         Serial.println("Payload size exceeds the limit.");
-//         return false;
-//     }
-
-//     if (!isValidJson(jsonMessage)) {
-//         Serial.println("Invalid JSON format.");
-//         return false;
-//     }
-
-//     Serial.print("Status: ");
-//     if(client.publish(topic.c_str(), jsonMessage.c_str(), true)) {
-//         Serial.println("Success!");
-//         return true;
-//     } else {
-//         Serial.print("Failed with state: ");
-//         Serial.println(client.state());
-//         return false;
-//     }
-// }
 
 bool MyMQTT::publish(String feedName, String message) {
     if (!client.connected()) {
@@ -166,17 +103,3 @@ void MyMQTT::callback(char* topic, byte* payload, unsigned int length) {
     }
     Serial.println();
 }
-
-// void MyMQTT::reConnect() {
-//     while (!client.connected()) {
-//         Serial.print("Attempting MQTT connection...");
-//         if (client.connect("ESP32Client", user.c_str(), password.c_str())) {
-//             Serial.println("connected");
-//         } else {
-//             Serial.print("failed, rc=");
-//             Serial.print(client.state());
-//             Serial.println(" try again in 5 seconds");
-//             delay(5000);
-//         }
-//     }
-// }

@@ -2,12 +2,14 @@
 #define INC_SENSOR_DATA_H_
 
 #include <ArduinoJson.h>
+#include <Wire.h>
 
 class SENSOR_DATA{
   public:
     SENSOR_DATA(){};
     String floatToString(float value);
-    String createWaterStationJSON(float EC, float PH, float ORP, float TEMP, float LON, float LAT);
+    void controlRelay(int RELAY);
+    String createWaterStationJSON(float EC, float PH, float ORP, float TEMP, float LON, float LAT, int RELAY);
 };
 
 class SENSOR_RS485{

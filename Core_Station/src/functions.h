@@ -5,8 +5,6 @@
   Description: This code is part of the CEMP Mobility Water Monitoring Station project.
 */
 
-bool displayState = true; // Variable to keep track of the display's state
-
 struct IconSize {
   int width;
   int height;
@@ -25,10 +23,10 @@ const IconPosition iconPositions[] = {
 };
 
 const IconSize iconSizes[] = {
-  {64, 64},    // EC
-  {64, 64},    // Temperature
-  {65, 65},    // ORP
-  {64, 64}     // pH
+  {64, 64},
+  {64, 64},
+  {65, 65},
+  {64, 64}
 };
 
 struct IconData {
@@ -38,11 +36,37 @@ struct IconData {
 };
 
 IconData icons[] = {
-  {EC, EC_off, true},
-  {Temp, Temp_off, true},
-  {ORP, ORP_off, true},
-  {pH, pH_off, true}
+  {EC, EC_off, false},
+  {Temp, Temp_off, false},
+  {ORP, ORP_off, false},
+  {pH, pH_off, false}
 };
+
+void sendEspNowMessage() {
+  uint8_t nodeMacAddress[] = {0x4C, 0x75, 0x25, 0x97, 0xA9, 0x68};
+  
+  uint8_t dataToSend = 0;  // Assuming 0 is the command to turn off the relay
+
+  Serial.print("Sending message to node: ");
+  for (int i = 0; i < sizeof(nodeMacAddress); ++i) {
+    Serial.printf("%02X", nodeMacAddress[i]);
+    if (i < sizeof(nodeMacAddress) - 1) Serial.print(":");
+  }
+  Serial.println();
+
+  Serial.print("Data being sent: ");
+  Serial.println(dataToSend);
+
+  esp_now_send(nodeMacAddress, &dataToSend, sizeof(dataToSend));
+}
+
+void onEspNowSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  if (status == ESP_NOW_SEND_SUCCESS) {
+    Serial.println("Message sent successfully to node.");
+  } else {
+    Serial.println("Failed to send message to node. Status: " + String(status));
+  }
+}
 
 void toggleIcon(int iconIndex) {
   IconData& icon = icons[iconIndex];
@@ -52,6 +76,13 @@ void toggleIcon(int iconIndex) {
   const IconSize& size = iconSizes[iconIndex];
   M5.Lcd.fillRect(pos.x, pos.y, size.width, size.height, TFT_SCREEN_BG);
   M5.Lcd.drawPng(icon.state ? icon.onImage : icon.offImage, sizeof(pH), pos.x, pos.y, size.width, size.height);
+
+  Relay = icon.state;
+  if (!Relay) {
+    sendEspNowMessage();
+    esp_now_register_send_cb(onEspNowSend);
+  }
+  Serial.println("Relay turned " + String(Relay ? "ON" : "OFF"));
 }
 
 void button(void* pvParameters) {
@@ -65,6 +96,8 @@ void button(void* pvParameters) {
           touchDetails.x >= pos.x && touchDetails.x <= pos.x + size.width && 
           touchDetails.y >= pos.y && touchDetails.y <= pos.y + size.height) {
           toggleIcon(i);
+          Relay = icons[i].state;
+          Serial.println("Relay turned " + String(Relay ? "ON" : "OFF"));
           break;
         }
       }
@@ -80,7 +113,6 @@ void bootLogo() {
     delay(3000);
 }
 
-// View battery
 void viewBattery() {
   char buf[8];
 
@@ -119,7 +151,6 @@ void viewBattery() {
   M5.Displays(0).drawString(buf, 290, 11);
 }
 
-// Init Led
 void initLed() {
   for (uint8_t j = 0; j < NUM_LEDS; j++) {
     leds[j] = CRGB::Black;
@@ -168,9 +199,7 @@ void led(void *pvParameters) {
   }
 }
 
-// Function to convert CRGB to a format compatible with LGFX (e.g., rgb565_t)
 lgfx::v1::rgb565_t convertCRGBtoRGB565(const CRGB& color) {
-    // Extract individual color components from CRGB
     uint8_t red = color.red;
     uint8_t green = color.green;
     uint8_t blue = color.blue;
@@ -191,52 +220,46 @@ const char* waterQualityMessages[] = {
     "Extremely Dangerous - Toxic, do not consume or use"
 };
 
-// Normalize the sensor values
 float normalizeSensorValue(float value, float minRange, float maxRange) {
     return (value - minRange) / (maxRange - minRange);
 }
 
-// Calculate modified WQI
 float calculateModifiedWQI(float normalizedEC, float normalizedpH, float normalizedORP, float normalizedTemp) {
-    // Assign weights based on the significance of each parameter in water quality
     float weightEC = 0.25;
     float weightpH = 0.25;
     float weightORP = 0.25;
     float weightTemp = 0.25;
 
-    // Calculate modified WQI
     return (normalizedEC * weightEC + normalizedpH * weightpH + normalizedORP * weightORP + normalizedTemp * weightTemp) * 100;
 }
 
-// Determine the water quality level based on WQI
 int determineQualityLevel(float wqi) {
-    if (wqi >= 90) return 0; // Excellent
-    if (wqi >= 70) return 1; // Very Good
-    if (wqi >= 50) return 2; // Good
-    if (wqi >= 30) return 3; // Moderate
-    if (wqi >= 15) return 4; // Poor
-    if (wqi >= 5) return 5;  // Very Poor
-    return 6;                // Extremely Dangerous
+    if (wqi >= 90) return 0; 
+    if (wqi >= 70) return 1; 
+    if (wqi >= 50) return 2;
+    if (wqi >= 30) return 3;
+    if (wqi >= 15) return 4;
+    if (wqi >= 5) return 5;
+    return 6;
 }
 
-// Main function to check water quality
-void checkWaterQuality(float EC, float pH, float ORP, float Temp) {
-    // Normalize sensor values using standard ranges (these ranges may need to be adjusted)
-    float normalizedEC = normalizeSensorValue(EC, 0, 2000);
-    float normalizedpH = normalizeSensorValue(pH, 6, 9); // Normal pH range for natural water
-    float normalizedORP = normalizeSensorValue(ORP, -2000, 2000);
-    float normalizedTemp = normalizeSensorValue(Temp, 0, 60); // Assuming 60°C as the upper limit for natural water
+void displayWaterQualityMessage(int qualityLevel) {
+  const char* message = waterQualityMessages[qualityLevel];
 
-    // Calculate modified WQI
-    float wqi = calculateModifiedWQI(normalizedEC, normalizedpH, normalizedORP, normalizedTemp);
+  int messageWidth = M5.Displays(0).textWidth(message);
 
-    // Determine quality level and display results
-    int qualityLevel = determineQualityLevel(wqi);
-    displayWaterQualityMessage(qualityLevel);
-    drawQualityIndicator(qualityLevel);
+  int screenWidth = 320;
+  
+  int messageX = (screenWidth - messageWidth) / 2;
+
+  if (messageX < 0) {
+      messageX = 0;
+  }
+
+  M5.Displays(0).drawString(message, messageX, 142);
 }
 
-// Draw the color-coded indicator on a ruler
+
 void drawQualityIndicator(int qualityLevel) {
     CRGB color;
     switch (qualityLevel) {
@@ -245,14 +268,28 @@ void drawQualityIndicator(int qualityLevel) {
         case 2: color = CRGB::Yellow; break;
         case 3: color = CRGB::Orange; break;
         case 4: color = CRGB::DarkOrange; break;
-        case 5: color = CRGB::Red; break;
-        default: color = CRGB::DarkRed; break;
+        case 5: color = CRGB::DarkSalmon; break;
+        default: color = CRGB::Red; break;
     }
-    // Convert CRGB to RGB565
+
     lgfx::v1::rgb565_t convertedColor = convertCRGBtoRGB565(color);
 
-    // Use the converted color with LGFX functions
-    M5.Displays(0).fillRect(16 + 64 * qualityLevel, 108, 64, 2, convertedColor);
+    int posX = 16 + 64 * (qualityLevel * 1.02) + 8 * (qualityLevel * 1.02);
+    M5.Displays(0).fillRect(posX, 108, 64, 2, convertedColor);
+}
+
+
+void checkWaterQuality(float EC, float pH, float ORP, float Temp) {
+    float normalizedEC = normalizeSensorValue(EC, 0, 2000);
+    float normalizedpH = normalizeSensorValue(pH, 6, 9);
+    float normalizedORP = normalizeSensorValue(ORP, -2000, 2000);
+    float normalizedTemp = normalizeSensorValue(Temp, 0, 60);
+
+    float wqi = calculateModifiedWQI(normalizedEC, normalizedpH, normalizedORP, normalizedTemp);
+
+    int qualityLevel = determineQualityLevel(wqi);
+    displayWaterQualityMessage(qualityLevel);
+    drawQualityIndicator(qualityLevel);
 }
 
 void viewUI() {
@@ -287,21 +324,6 @@ void viewUI() {
 
   // M5.Displays(0).drawString("V" + String(VERSION) + " by " + String(AUTHOR), 202, 232);
   M5.Displays(0).drawString("V" + String(VERSION), 280, 232);
-}
-
-void toggleDisplay() {
-    // Check if the power button is pressed
-    if (M5.BtnPwr.wasPressed()) {
-        displayState = !displayState; // Toggle the display state
-        if (displayState) {
-            // Turn on the display and restore the UI state
-            M5.display(true);
-            viewUI(); // Call viewUI() to restore the UI state
-        } else {
-            // Turn off the display
-            M5.display(false);
-        }
-    }
 }
 
 // Detail for each range of `weightedSum`:

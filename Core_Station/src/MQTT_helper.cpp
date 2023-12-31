@@ -78,3 +78,7 @@ void MyMQTT::reConnect() {
 String MyMQTT::getMessage() {
     return lastMessage;
 }
+
+void MyMQTT::clearLastMessage() {
+  lastMessage = "";
+}

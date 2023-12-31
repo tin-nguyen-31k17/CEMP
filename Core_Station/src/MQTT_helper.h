@@ -23,6 +23,7 @@ public:
     bool publish(String, String);
     void checkConnect();
     String getMessage();
+    void clearLastMessage();
 
 private:
     void callback(char*, byte*, unsigned int);

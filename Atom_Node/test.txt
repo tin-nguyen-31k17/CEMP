@@ -1,0 +1,90 @@
+  // Serial.print("### Sending Message ###\n");
+  // Serial.print("Data to be send: ");
+  // for (int i = 0; i < SENSOR_COUNT; i++) {
+  //   Serial.print("0x");
+  //   Serial.print(dataToSend[i], HEX);
+  //   Serial.print(", ");
+  // }
+  // Serial.println();
+
+  // esp_now_register_send_cb([](const uint8_t* mac, esp_now_send_status_t sendStatus){
+  //   messageSent = true;
+  //   if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+  //     Serial.println("Message sent successfully!");
+  //     Serial.println();
+  //   } else {
+  //     Serial.println("Message sent failed! Backing up the data.");
+  //     backupMessage(dataToSend, sizeof(dataToSend));
+  //     Serial.println();
+  //     failedSendCount++;      
+  //     if (failedSendCount > MAX_FAILED_SENDS) {
+  //       Serial.println("Failed to send message 3 times. Initiating DTU LTE module...");
+  //       initDTULTE();
+  //       Serial.println("DTU LTE module initialized!");
+  //       delay(1000);
+  //       Serial.println("Connecting to MQTT server...");
+  //       myMQTT.connectToMQTT();
+  //       Serial.println("Connected to MQTT server!");
+  //       myMQTT.subscribe(myTopic);
+  //       Serial.println("Subscribed to topic: " + myTopic);
+  //       Serial.println("Sending message...");
+  //       String dataToPub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], Lon, Lat);
+  //       if (myMQTT.publish(myTopic, dataToPub)) {
+  //         Serial.println("Message sent successfully via DTU LTE module!");
+  //         failedSendCount = 0;
+  //       }
+  //     }
+  //   }
+  // });
+
+  // // Sleep mode integration
+  // static int failedSendCount = 0;
+  // const int MAX_FAILED_SENDS = 10;
+  // const unsigned long SLEEP_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+  // const unsigned long MQTT_CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes in milliseconds
+  // bool messageSent = false;
+
+  // if (backupIndex > 0) {
+  //     esp_err_t result = esp_now_send(peer_addr, backupBuffer, backupIndex);
+
+  //     if (result == ESP_OK) {
+  //         Serial.println("Backup message sent successfully!");
+  //         Serial.println();
+  //         backupIndex = 0;
+  //     } else {
+  //         Serial.println("Backup message sending failed! Data will remain in the backup buffer.");
+  //         Serial.println();
+  //     }
+  // }
+
+  // // Data sending logic
+  // esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
+  // if (result == ESP_OK) {
+  //   Serial.println("Message sent successfully!");
+  //   messageSent = true;
+  //   failedSendCount = 0;
+  // } else {
+  //   Serial.println("Message sending failed!");
+  //   messageSent = false;
+  //   failedSendCount++;
+  // }
+
+  // if (!messageSent) {
+  //     failedSendCount++;
+  // } else {
+  //     failedSendCount = 0;
+  // }
+
+  // if (failedSendCount >= MAX_FAILED_SENDS) {
+  //     enterSleepMode(SLEEP_DURATION, MQTT_CHECK_INTERVAL);
+  //     failedSendCount = 0; // Reset counter after sleep duration
+  // } 
+
+  // esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
+
+  // if (result == ESP_NOW_SEND_SUCCESS) {
+  //   Serial.println("Success");
+  // } else {
+  //   Serial.print("Sending result: ");
+  //   Serial.println(result);
+  // }

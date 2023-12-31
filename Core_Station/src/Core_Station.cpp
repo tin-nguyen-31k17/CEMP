@@ -20,88 +20,105 @@ void initVariant() {
 }
 
 void decodeMessage(String message) {
-    if (message.isEmpty()) {
-        Serial.println("Empty MQTT message received.");
-        return;
+  if (message.isEmpty()) {
+    Serial.println("Empty MQTT message received.");
+    return;
+  }
+
+  const size_t capacity = JSON_ARRAY_SIZE(6) + 6*JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(7) + 390;
+  DynamicJsonDocument doc(capacity);
+
+  DeserializationError error = deserializeJson(doc, message);
+  if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.f_str());
+    return;
+  }
+
+  JsonObject data = doc.as<JsonObject>();
+  if (!data.containsKey("sensors")) {
+    Serial.println("JSON does not contain 'sensors' key.");
+    return;
+  }
+
+  JsonArray sensors = data["sensors"];
+  for (JsonVariant v : sensors) {
+    String sensor_id = v["sensor_id"].as<String>().c_str();
+    String sensor_value_str = v["sensor_value"].as<String>().c_str(); 
+
+    if (sensor_value_str.isEmpty()) {
+      Serial.println("Failed to get sensor value for " + sensor_id);
+      continue;
     }
 
-    const size_t capacity = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(5) + 290;
-    DynamicJsonDocument doc(capacity);
+    float sensor_value = sensor_value_str.toFloat();
 
-    DeserializationError error = deserializeJson(doc, message);
-    if (error) {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
-        return;
+    if (sensor_id.equalsIgnoreCase("EC_01")) {
+      receivedData[0] = sensor_value;
+    } else if (sensor_id.equalsIgnoreCase("PH_01")) {
+      receivedData[1] = sensor_value;
+    } else if (sensor_id.equalsIgnoreCase("ORP_01")) {
+      receivedData[2] = sensor_value;
+    } else if (sensor_id.equalsIgnoreCase("TEMP_01")) {
+      receivedData[3] = sensor_value;
     }
 
-    JsonObject data = doc["data"];
-    const char* station_id = data["station_id"]; 
-    const char* station_name = data["station_name"]; 
-    receivedData[4] = data["gps_longitude"].as<float>(); 
-    receivedData[5] = data["gps_latitude"].as<float>(); 
-
-    JsonArray sensors = data["sensors"];
-    for(JsonVariant v : sensors) {
-      String sensor_id = v["sensor_id"].as<String>(); 
-      const char* sensor_name = v["sensor_name"]; 
-      float sensor_value = v["sensor_value"].as<float>(); 
-      const char* sensor_unit = v["sensor_unit"]; 
-
-      // Map the sensor values to the receivedData array
-      if (sensor_id == "ec_0001") {
-          receivedData[0] = sensor_value;
-      } else if (sensor_id == "ph_0001") {
-          receivedData[1] = sensor_value;
-      } else if (sensor_id == "ORP_0001") {
-          receivedData[2] = sensor_value;
-      } else if (sensor_id == "TEMP_0001") {
-          receivedData[3] = sensor_value;
-      }
-    }
+    Serial.print(sensor_id); Serial.print(" Value: "); Serial.println(sensor_value);
+  }
 }
 
-void printSDCardInfo() {
-    uint32_t cardSize = SD.cardSize() / (1024 * 1024);
-    Serial.printf("SD Card Size: %uMB\n", cardSize);
-    M5.Displays(0).drawString("SD Card Size: " + String(cardSize) + "MB", 160, 100);
-    delay(2000);
-    M5.Displays(0).drawString("", 160, 100);
-    delay(500);
+void viewRelayState(int relayState) {
+  String relayStateStr = (relayState == 1) ? "ON" : "OFF";
+  M5.Displays(0).setFont(&arial6pt7b);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).drawString("Relay State: " + relayStateStr, 96, 10);
+}
+
+void viewSDCardInfo() {
+  uint32_t cardSize = SD.cardSize() / (1024 * 1024);
+  Serial.printf("SD Card Size: %uMB\n", cardSize);
+
+  M5.Displays(0).setFont(&arial6pt7b);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  if (cardSize < 1000) {
+    M5.Displays(0).drawString("SD Card Size: " + String(cardSize) + "MB", 108, 232);
+  } else {
+    M5.Displays(0).drawString("SD Card Size: " + String(cardSize) + "MB", 131, 232);
+  }
 }
 
 bool isSDCardFull() {
-    uint32_t freeSpace = SD.totalBytes() - SD.usedBytes();
-    return freeSpace == 0;
+  uint32_t freeSpace = SD.totalBytes() - SD.usedBytes();
+  return freeSpace == 0;
 }
 
 void formatSDCard() {
-    File root = SD.open("/");
-    if (!root) {
-        Serial.println("Failed to open directory");
-        return;
+  File root = SD.open("/");
+  if (!root) {
+    Serial.println("Failed to open directory");
+    return;
+  }
+  while (true) {
+    File file = root.openNextFile();
+    if (!file) {
+        break;
     }
-    while (true) {
-        File file = root.openNextFile();
-        if (!file) {
-            break;
-        }
-        SD.remove(file.name());
-        file.close();
-    }
+    SD.remove(file.name());
+    file.close();
+  }
 }
 
 void writeDataToSDCard(uint8_t* data, size_t length) {
-    File file = SD.open("/data.txt", FILE_APPEND);
-    if (!file) {
-        Serial.println("Failed to open file for writing");
-        return;
-    }
-    for (size_t i = 0; i < length; i++) {
-        file.printf("%02X", data[i]);
-    }
-    file.println();
-    file.close();
+  File file = SD.open("/data.txt", FILE_APPEND);
+  if (!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+  for (size_t i = 0; i < length; i++) {
+    file.printf("%02X", data[i]);
+  }
+  file.println();
+  file.close();
 }
 
 void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
@@ -115,7 +132,6 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   SPI_MODE_SDCARD;
   writeDataToSDCard(receivedData, data_len);
   SPI_MODE_LCD;
-  printSDCardInfo();
   if (isSDCardFull()) {
     formatSDCard();
   }
@@ -133,7 +149,7 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   }
 
   String data_to_pub;
-  data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], sensorReadings[4], sensorReadings[5]);
+  data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], sensorReadings[4], sensorReadings[5], 1);
   myMQTT.publish(myTopic, data_to_pub);
   messageReceived = true;
 }
@@ -180,6 +196,10 @@ void setup() {
   viewUI();
 
   viewBattery();
+
+  viewSDCardInfo();
+
+  viewRelayState(Relay);
 
   #if BOARD != CORES3
     initLed();
@@ -247,8 +267,8 @@ void setup() {
   Serial.println(WiFi.macAddress());
 
   if (esp_now_init() == ESP_OK) {
-    Serial.println("ESPNow Init Successfully!");
-    M5.Displays(0).drawString("ESPNow Init Successfully!", 160, 100);
+    Serial.println("ESPNow Initialized!");
+    M5.Displays(0).drawString("ESPNow Initialized!", 160, 100);
     delay(2000);
     M5.Displays(0).drawString("", 160, 100);
     delay(250);
@@ -282,131 +302,107 @@ void setup() {
   #endif
 }
 
-void loop() {
-  // Check and toggle the display state
-  toggleDisplay();
+void displayEC(float EC) {
+  M5.Displays(0).setFont(&digital_7__mono_24pt7b);
+  M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
+  int xPosition = (EC >= 100 && EC < 200) ? 79 : (EC >= 200) ? 82 : ((EC >= 10 && EC < 100) ? 88 : ((EC >= 1 && EC < 10) ? 88 : 90));
+  M5.Displays(0).drawString(String(int(EC)), xPosition, 50);
 
-  // Process received data regardless of the display state
+  M5.Displays(0).setFont(&arial6pt7b);
+  int unitYPosition = 63;
+  M5.Displays(0).drawString("mS/cm", xPosition + 30, unitYPosition); 
+}
+
+void displayPH(float pH) {
+  M5.Displays(0).setFont(&digital_7__mono_24pt7b);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  int xPosition = (pH > 14 || pH < 9) ? 248 : 245;
+  M5.Displays(0).drawString(String(int(pH)), xPosition, 50);
+  M5.Displays(0).setFont(&arial6pt7b);
+  int unitXPosition = xPosition + (pH > 14 ? 54 : 40);
+  M5.Displays(0).drawString("pH", unitXPosition, 63);
+}
+
+void displayORP(float ORP) {
+  M5.Displays(0).setFont(&digital_7__mono_24pt7b);
+  M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
+  int xPosition = (ORP >= 100 && ORP < 200) ? 238 : (ORP >= 200) ? 242 : ((ORP >= 10 && ORP < 100) ? 245 : ((ORP >= 1 && ORP < 10) ? 248 : 250));
+  M5.Displays(0).drawString(String(int(ORP)), xPosition, 195);
+
+  M5.Displays(0).setFont(&arial6pt7b);
+  int unitYPosition = 208;
+  M5.Displays(0).drawString("mV", xPosition + 50, unitYPosition);
+}
+
+void displayTemp(float Temp) {
+  M5.Displays(0).setFont(&digital_7__mono_24pt7b);
+  M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
+  int xPosition = (Temp >= 60 && Temp < 100) ? 90 : (Temp >= 100) ? 88 : ((Temp >= 10) ? 92 : 90);
+  M5.Displays(0).drawString(String(int(Temp)), xPosition, 195);
+
+  M5.Displays(0).setFont(&arial6pt7b);
+  int degreeXPosition = (Temp >= 10) ? 130 : 120;
+  M5.Displays(0).drawString("o", degreeXPosition + 3, 182);
+  M5.Displays(0).drawString("C", degreeXPosition + 11, 187);
+}
+
+void loop() {
+  viewUI();
+  viewBattery();
+  viewSDCardInfo();
+  float EC, pH, Temp, ORP;
+  EC = receivedData[0];
+  pH = receivedData[1];
+  Temp = receivedData[3];
+  ORP = receivedData[2];
+  Lon = receivedData[4];
+  Lat = receivedData[5];
+  Day = receivedData[6];
+  Month = receivedData[7];
+  Year = receivedData[8];
+  Hour = receivedData[9];
+  Minute = receivedData[10];
+  Second = receivedData[11];
+  Relay = receivedData[12];
+  dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) 
+              + "/" + "20" + String(Year) + " " + String(Hour) 
+              + ":" + String(Minute) + ":" + String(Second) 
+              + " GPS: " + String(float(Lon)) 
+              + ":" + String(float(Lat));
+  Serial.println(messageReceived);
   if (!messageReceived) {
     String mqttMessage = myMQTT.getMessage();
-    if (!mqttMessage.isEmpty()) {
-      decodeMessage(mqttMessage);
-    }
+    decodeMessage(mqttMessage);
+    messageReceived = true;
   } else {
-    String data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat);
+    String data_to_pub;
+    data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat, 1);
     myMQTT.publish(myTopic, data_to_pub);
-    messageReceived = false;
+  }
+  messageReceived = false;
+  viewRelayState(Relay);
+  M5.Displays(0).setFont(&arial6pt7b);
+  M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
+  M5.Displays(0).setTextDatum(CC_DATUM);
+  M5.Displays(0).setTextPadding(18);
+  M5.Displays(0).drawString(dateTimeGPS, 160, 96);
+  M5.Displays(0).setFont(&digital_7__mono_24pt7b);
+  M5.Displays(0).setTextDatum(CL_DATUM);
+  M5.Displays(0).setTextPadding(30);
+  displayEC(EC);
+  displayPH(pH);
+  displayTemp(Temp);
+  displayORP(ORP);
+  M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
+
+  checkWaterQuality(EC, pH, Temp, ORP);
+
+  String mqttMessage = myMQTT.getMessage();
+  if (!mqttMessage.isEmpty()) {
+    decodeMessage(mqttMessage);
+    myMQTT.clearLastMessage();
   }
 
-  // Only update the UI and perform sensor-related tasks if the display is on
-  if (displayState) {
-    viewUI();
-    viewBattery();
-
-    // Retrieve sensor data and update display
-    EC = receivedData[0];
-    pH = receivedData[1];
-    Temp = receivedData[3];
-    ORP = receivedData[2];
-    Lon = receivedData[4];
-    Lat = receivedData[5];
-    Day = receivedData[6];
-    Month = receivedData[7];
-    Year = receivedData[8];
-    Hour = receivedData[9];
-    Minute = receivedData[10];
-    Second = receivedData[11];
-    dateTimeGPS = "DateTime: " + String(Day) + "/" + String(Month) 
-                + "/" + "20" + String(Year) + " " + String(Hour) 
-                + ":" + String(Minute) + ":" + String(Second) 
-                + " GPS: " + String(float(Lon)) 
-                + ":" + String(float(Lat));
-
-    Serial.println("EC: " + String(EC) + " mS/cm");
-    Serial.println("pH: " + String(pH));
-    Serial.println("ORP: " + String(ORP) + " mV");
-    Serial.println("Temp: " + String(Temp) + " oC");
-    Serial.println("Lon: " + String(float(Lon)));
-    Serial.println("Lat: " + String(float(Lat)));
-    Serial.println("DateTime: " + String(Day) + "/" + String(Month) 
-                + "/" + "20" + String(Year) + " " + String(Hour) 
-                + ":" + String(Minute) + ":" + String(Second));
-
-    M5.Displays(0).setFont(&arial6pt7b);
-    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-    M5.Displays(0).setTextDatum(CC_DATUM);
-    M5.Displays(0).setTextPadding(20);
-    M5.Displays(0).drawString(dateTimeGPS, 160, 96);
-
-    M5.Displays(0).setFont(&digital_7__mono_24pt7b);
-    M5.Displays(0).setTextDatum(CL_DATUM);
-    M5.Displays(0).setTextPadding(40);
-    if (EC > 19 || EC < 9) {
-      M5.Displays(0).drawString(String(int(EC)), 90, 50);
-    } else {
-      M5.Displays(0).drawString(String(int(EC)), 80, 50);
-    }
-    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-    if (pH > 19 || pH < 9) {
-      M5.Displays(0).drawString(String(int(pH)), 248, 50);
-    } else {
-      M5.Displays(0).drawString(String(int(pH)), 244, 50);
-    }
-    M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-    if (Temp > 19 || Temp < 9) {
-      M5.Displays(0).drawString(String(int(Temp)), 90, 195);
-    } else {
-      M5.Displays(0).drawString(String(int(Temp)), 80, 195);
-    }
-    M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-    if (ORP < 9 || ORP > 19) {
-      M5.Displays(0).drawString(String(int(ORP)), 248, 195);
-    } else {
-      M5.Displays(0).drawString(String(int(ORP)), 244, 195);
-    }
-
-    M5.Displays(0).setFont(&arial6pt7b);
-    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-    M5.Displays(0).setTextDatum(CL_DATUM);
-    M5.Displays(0).setTextPadding(0);
-
-    M5.Displays(0).setTextColor(TFT_PINK, TFT_SCREEN_BG);
-    if (EC > 9) {
-      M5.Displays(0).drawString("mS/cm", 135, 63);
-    }
-    if (EC > 99) {
-      M5.Displays(0).drawString("mS/cm", 145, 63);
-    } else {
-      M5.Displays(0).drawString("mS/cm", 125, 63);
-    }
-
-    M5.Displays(0).setTextColor(TFT_WHITE, TFT_SCREEN_BG);
-    if (pH < 10) {
-      M5.Displays(0).drawString("pH", 285, 63);
-    } else {
-      M5.Displays(0).drawString("pH", 295, 63);
-    }
-
-    M5.Displays(0).setTextColor(TFT_SKYBLUE, TFT_SCREEN_BG);
-    if (Temp < 20) {
-      M5.Displays(0).drawString("o", 120, 185);
-      M5.Displays(0).drawString("C", 128, 190);
-    } else {
-      M5.Displays(0).drawString("o", 140, 185);
-      M5.Displays(0).drawString("C", 148, 190);
-    }
-
-    M5.Displays(0).setTextColor(TFT_ORANGE, TFT_SCREEN_BG);
-    if (ORP < 100) {
-      M5.Displays(0).drawString("mV", 292, 208);
-    } else {
-      M5.Displays(0).drawString("mV", 292, 218);
-    }
-
-    M5.Displays(0).fillRect(0, 100, 320, 2, TFT_SCREEN_BG);
-
-    checkWaterQuality(EC, pH, Temp, ORP);
-  }
   delay(10000);
   myMQTT.checkConnect();
   M5.update();

@@ -1,4 +1,9 @@
-
+/*
+  Project: CEMP Mobility Water Monitoring Station
+  Author: Nguyen Trong Tin
+  Email:tin.nguyen.31k17@hcmut.edu.vn
+  Description: This code is part of the CEMP Mobility Water Monitoring Station project.
+*/
 #include "sensor_data.h"
 
 String SENSOR_DATA::floatToString(float value) {
@@ -6,7 +11,7 @@ String SENSOR_DATA::floatToString(float value) {
   sprintf(buffer, "%.2f", value);
   return String(buffer);
 }
-String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float TEMP, float LON, float LAT) {
+String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float TEMP, float LON, float LAT, int RELAY) {
   DynamicJsonDocument doc(1024);
 
   doc["station_id"] = "water_0001";
@@ -23,28 +28,34 @@ String SENSOR_DATA::createWaterStationJSON(float EC, float PH, float ORP, float 
   JsonArray sensors = doc.createNestedArray("sensors");
 
   JsonObject ec_sensor = sensors.createNestedObject();
-  ec_sensor["sensor_id"] = "ec_0001";
-  ec_sensor["sensor_name"] = "EC 0001";
+  ec_sensor["sensor_id"] = "EC_01";
+  ec_sensor["sensor_name"] = "EC";
   ec_sensor["sensor_value"] = floatToString(EC);
   ec_sensor["sensor_unit"] = "ms/cm";
 
   JsonObject ph_sensor = sensors.createNestedObject();
-  ph_sensor["sensor_id"] = "ph_0001";
-  ph_sensor["sensor_name"] = "PH 0001";
+  ph_sensor["sensor_id"] = "PH_01";
+  ph_sensor["sensor_name"] = "PH";
   ph_sensor["sensor_value"] = floatToString(PH);
   ph_sensor["sensor_unit"] = "pH";
 
   JsonObject orp_sensor = sensors.createNestedObject();
-  orp_sensor["sensor_id"] = "ORP_0001";
-  orp_sensor["sensor_name"] = "ORP 0001";
+  orp_sensor["sensor_id"] = "ORP_01";
+  orp_sensor["sensor_name"] = "ORP";
   orp_sensor["sensor_value"] = floatToString(ORP);
   orp_sensor["sensor_unit"] = "mV";
 
   JsonObject temp_sensor = sensors.createNestedObject();
-  temp_sensor["sensor_id"] = "TEMP_0001";
-  temp_sensor["sensor_name"] = "Nhiệt Độ";
+  temp_sensor["sensor_id"] = "TEMP_01";
+  temp_sensor["sensor_name"] = "Temp";
   temp_sensor["sensor_value"] = floatToString(TEMP);
   temp_sensor["sensor_unit"] = "°C";
+
+  JsonObject relay = sensors.createNestedObject();
+  relay["sensor_id"] = "RELAY_01";
+  relay["sensor_name"] = "Relay";
+  relay["sensor_value"] = RELAY;
+  relay["sensor_unit"] = "ON/OFF";
 
   String jsonString;
   serializeJson(doc, jsonString);

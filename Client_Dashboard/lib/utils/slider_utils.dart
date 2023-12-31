@@ -21,17 +21,17 @@ double scaleValue(double value, double min, double max) {
 const double kDiameter = 200;
 
 Map<String, List<double>> deviceRanges = {
-  'ec_0001': [0.0, 2000.0],
-  'ph_0001': [0.0, 14.0],
-  'ORP_0001': [-2000.0, 2000.0],
-  'TEMP_0001': [0.0, 100.0],
+  'EC_01': [0.0, 2000.0],
+  'PH_01': [0.0, 14.0],
+  'ORP_01': [-2000.0, 2000.0],
+  'TEMP_01': [0.0, 100.0],
 };
 
 Map<String, String> unit = {
-  'ec_0001': 'mS/cm',
-  'ph_0001': 'pH',
-  'ORP_0001': 'mV',
-  'TEMP_0001': '°C',
+  'EC_01': 'mS/cm',
+  'PH_01': 'pH',
+  'ORP_01': 'mV',
+  'TEMP_01': '°C',
 };
 
 double kMinDegree(String deviceId) => deviceRanges[deviceId]?[0] ?? 0.0;

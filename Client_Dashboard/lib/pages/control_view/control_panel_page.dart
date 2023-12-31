@@ -38,7 +38,7 @@ class ControlPanelPage extends StatefulWidget {
 }
 
 class _ControlPanelPageState extends State<ControlPanelPage>
-    with TickerProviderStateMixin {
+  with TickerProviderStateMixin {
   Options option = Options.setting;
   bool isActive = false;
   int level = 1;
@@ -74,7 +74,7 @@ class _ControlPanelPageState extends State<ControlPanelPage>
     }
   }
 
-void onGraphOptionSelected() {
+  void onGraphOptionSelected() {
     final List<DeviceModel> deviceData =
         Provider.of<DeviceListModel>(context, listen: false).devices;
     if (deviceData[widget.selectedDeviceIndex].gps != null) {
@@ -253,10 +253,10 @@ void onGraphOptionSelected() {
         ),
         ThresholdWidget(
           selectedDeviceIndex: widget.selectedDeviceIndex,
-          value: value,
+          initialValue: devices[widget.selectedDeviceIndex].value ?? 0.0,
           changeThreshold: (value) => setState(() {
-            value = devices[widget.selectedDeviceIndex].value ?? 0.0;
-            progressVal = normalize(value, kMinDegree, kMaxDegree);
+            devices[widget.selectedDeviceIndex].value = value;
+            progressVal = normalize(value, kMinDegree(devices[widget.selectedDeviceIndex].id), kMaxDegree(devices[widget.selectedDeviceIndex].id));
           }),
           device: devices[widget.selectedDeviceIndex],
         ),

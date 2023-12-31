@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
           isActive: false,
           icon: 'assets/svg/IconEC.svg',
           value: 0.0,
-          id: 'ec_0001',
+          id: 'EC_01',
           unit: 'mS/cm'),
       DeviceModel(
           name: 'pH Sensor',
@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
           isActive: false,
           icon: 'assets/svg/IconpH.svg',
           value: 0.0,
-          id: 'ph_0001',
+          id: 'PH_01',
           unit: 'pH'),
       DeviceModel(
           name: 'Temp Sensor',
@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> {
           isActive: false,
           icon: 'assets/svg/IconTemp.svg',
           value: 0.0,
-          id: 'TEMP_0001',
+          id: 'TEMP_01',
           unit: '°C'),
       DeviceModel(
           name: 'ORP Sensor',
@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
           isActive: false,
           icon: 'assets/svg/IconORP.svg',
           value: 0.0,
-          id: 'ORP_0001',
+          id: 'ORP_01',
           unit: 'mV'),
     ];
 
