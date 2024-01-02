@@ -137,7 +137,7 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   }
 
   Serial.print("Decrypted Data: ");
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < 13; i++) {
     Serial.print("0x");
     Serial.print(receivedData[i], HEX);
     Serial.print(", ");
@@ -149,7 +149,7 @@ void OnDataRecv(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
   }
 
   String data_to_pub;
-  data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], sensorReadings[4], sensorReadings[5], 1);
+  data_to_pub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], sensorReadings[4], sensorReadings[5], sensorReadings[6]);
   myMQTT.publish(myTopic, data_to_pub);
   messageReceived = true;
 }
@@ -376,7 +376,7 @@ void loop() {
     messageReceived = true;
   } else {
     String data_to_pub;
-    data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat, 1);
+    data_to_pub = sensorData.createWaterStationJSON(EC, pH, ORP, Temp, Lon, Lat, Relay);
     myMQTT.publish(myTopic, data_to_pub);
   }
   messageReceived = false;

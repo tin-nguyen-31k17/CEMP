@@ -26,7 +26,8 @@
 // #define SOFTAP_SSID "cce_hocvien"
 // #define SOFTAP_PASS "0902449198"
 #define SOFTAP_SSID "Trong Tin"
-#define SOFTAP_PASS "tbg31k17"
+// #define SOFTAP_PASS "tbg31k17"
+#define SOFTAP_PASS "tin1752545"
 #define SENSOR_COUNT 13
 
 #define TFT_SCREEN_BG M5.Displays(0).color565(32, 32, 32)

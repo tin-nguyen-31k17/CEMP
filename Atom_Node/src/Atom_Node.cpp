@@ -1,12 +1,3 @@
-/*
-    Project: CEMP Mobility Water Monitoring Station
-    Author: Nguyen Trong Tin
-    Email:tin.nguyen.31k17@hcmut.edu.vn
-    Description: This code is part of the CEMP Mobility Water Monitoring Station project.
-*/
-
-#include "MQTT_helper.h"
-#include "Atom_DTU_CAT1.h"
 #include "sensor_data.h"
 #include "Atom_Node.h"
 
@@ -38,51 +29,22 @@ void onEspNowReceive(const uint8_t *senderMac, const uint8_t *incomingData, int 
   }
 }
 
-void InitNetwork(void) {
-    unsigned long start = millis();
-    SerialMon.println("Initializing modem...");
-    while (!modem.init()) {
-        SerialMon.println("waiting...." + String((millis() - start) / 1000) +
-                          "s");
-    };
-
-    start = millis();
-    SerialMon.println("Waiting for network...");
-    while (!modem.waitForNetwork()) {
-        SerialMon.println("waiting...." + String((millis() - start) / 1000) +
-                          "s");
-    }
-
-    SerialMon.println("Waiting for GPRS connect...");
-    if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
-        SerialMon.println("waiting...." + String((millis() - start) / 1000) +
-                          "s");
-    }
-    SerialMon.println("success");
-}
-
-void initDTULTE() {
-  SerialAT.begin(SIM7680_BAUDRATE, SERIAL_8N1, ATOM_DTU_SIM7680_RX, ATOM_DTU_SIM7680_TX);
-  InitNetwork();
-  Serial.println("DTU LTE module initialized!");
-}
-
 void backupMessage(const uint8_t* data, size_t size) {
-    if (backupIndex + size <= BACKUP_BUFFER_SIZE) {
-        memcpy(backupBuffer + backupIndex, data, size);
-        backupIndex += size;
-        Serial.println("Message backed up successfully!");
-    } else {
-        Serial.println("Backup buffer full. Deleting the oldest data.");
-        size_t bytesToDelete = backupIndex + size - BACKUP_BUFFER_SIZE;
-        memmove(backupBuffer, backupBuffer + bytesToDelete, backupIndex - bytesToDelete);
-        backupIndex -= bytesToDelete;
+  if (backupIndex + size <= BACKUP_BUFFER_SIZE) {
+    memcpy(backupBuffer + backupIndex, data, size);
+    backupIndex += size;
+    Serial.println("Message backed up successfully!");
+  } else {
+    Serial.println("Backup buffer full. Deleting the oldest data.");
+    size_t bytesToDelete = backupIndex + size - BACKUP_BUFFER_SIZE;
+    memmove(backupBuffer, backupBuffer + bytesToDelete, backupIndex - bytesToDelete);
+    backupIndex -= bytesToDelete;
 
-        memcpy(backupBuffer + backupIndex, data, size);
-        backupIndex += size;
+    memcpy(backupBuffer + backupIndex, data, size);
+    backupIndex += size;
 
-        Serial.println("Backup buffer after deletion: " + String(backupIndex) + " bytes");
-    }
+    Serial.println("Backup buffer after deletion: " + String(backupIndex) + " bytes");
+  }
 }
 
 static void smartDelay(unsigned long ms) {
@@ -116,27 +78,28 @@ float decode_32bit(uint8_t receivedData[9]) {
 }
 
 void readSensor(SENSOR_RS485& sensor, float& sensorReading, const uint8_t* sensorData) {
- Serial2.write(sensorData, 8);
- delay(1000);
+  RS485.begin(9600, SERIAL_8N1, RS485_RX, RS485_TX);
+  RS485.write(sensorData, 8);
+  delay(1000);
 
- if (Serial2.available()) {
-   Serial2.readBytes(receivedData, sizeof(receivedData));
-   sensorReading = decode_32bit(receivedData);
- }
+  if (RS485.available() > 0) {
+    Serial.println("Reading response from sensor...");
+    RS485.readBytes(receivedData, sizeof(receivedData));
+    sensorReading = decode_32bit(receivedData);
+  } else {
+    Serial.println("No response from sensor!");
+  }
 }
 
-void generateRandDateTimeGPS() {
-  Day = random(1, 31);
-  Month = random(1, 13);
-  Year = random(20, 30);
-  Hour = random(0, 24);
-  Minute = random(0, 60);
-  Second = random(0, 60);
-
-  Lon = random(105.67, 109.87);
-  Lat = random(10.23, 10.98);
-
-  dateTime = String(Day) + "/" + String(Month) + "/" + "20" + String(Year) + " " + String(Hour) + ":" + String(Minute) + ":" + String(Second);
+void OnDataSent(const uint8_t* mac_addr, esp_now_send_status_t status) {
+  Serial.print("Last Packet Send Status: ");
+  if (status == ESP_NOW_SEND_SUCCESS) {
+    Serial.println("Delivery success");
+    espNowSendSuccess = true;
+  } else {
+    Serial.println("Delivery fail");
+    espNowSendSuccess = false;
+  }
 }
 
 void setup() {
@@ -158,23 +121,37 @@ void setup() {
   }
 
   esp_now_register_recv_cb(onEspNowReceive);
+  // Register OnDataSent callback
+  esp_now_register_send_cb(OnDataSent);
 
   Serial.println();
 }
 
 void loop() {
   SENSOR_RS485 data485;
+  // Add Gateway_Mac as a peer
   esp_now_peer_info_t gateway;
   memcpy(gateway.peer_addr, Gateway_Mac, 6);
   gateway.channel = WIFI_CHANNEL;
   gateway.encrypt = false;
   esp_now_add_peer(&gateway);
-  const uint8_t *peer_addr = gateway.peer_addr;
+
+  // Add Atom_Mac as a peer
+  esp_now_peer_info_t atom;
+  memcpy(atom.peer_addr, Atom_Mac, 6);
+  atom.channel = WIFI_CHANNEL;
+  atom.encrypt = false;
+  esp_now_add_peer(&atom);
+
+  const uint8_t* targetMac = (failedSendCount >= MAX_FAILED_SENDS) ? atom.peer_addr : gateway.peer_addr;
 
   if (relayStatus == 1) {
     digitalWrite(RELAY_PIN, HIGH);
-    uint8_t relayStatus = 1;
     Serial.println("### Relay turned on! Water is being pumped... ###\n");
+    delay(10000);
+    digitalWrite(RELAY_PIN, LOW);
+    Serial.println("### Relay turned off! ###\n");
+    Serial.println("### Wait 5 seconds to stabilize water flow... ###\n");
     delay(5000);
 
     Serial.print("### Reading All Sensor Data ###");
@@ -182,48 +159,39 @@ void loop() {
       switch (i) {
         case 0:
           Serial.println("Reading water EC sensor...");
-          // readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
-          sensorReadings[i] = random(0, 2000);
+          readSensor(data485, sensorReadings[i], data485.getDataWATER_EC());
           Serial.print("Water EC: ");
           break;
         case 1:
           Serial.println("Reading water PH sensor...");
-          // readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
-          sensorReadings[i] = random(0, 14);
+          readSensor(data485, sensorReadings[i], data485.getDataWATER_PH());
           Serial.print("Water PH: ");
           break;
         case 2:
           Serial.println("Reading water ORP sensor...");
-          // readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
-          sensorReadings[i] = random(-2000, 2000);
+          readSensor(data485, sensorReadings[i], data485.getDataWATER_ORP());
           Serial.print("Water ORP: ");
           break;
         case 3:
           Serial.println("Reading water temperature sensor...");
-          // readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
-          sensorReadings[i] = random(0, 100);
+          readSensor(data485, sensorReadings[i], data485.getDataWATER_TEMP());
           Serial.print("Water Temp: ");
           break;
       }
       Serial.println(sensorReadings[i]);
     }
     Serial.println();
-
-    digitalWrite(RELAY_PIN, LOW);
-    Serial.println("### Relay turned off! ###\n");
   } else {
     Serial.println("### Relay is off. Skipping sensor readings. ###\n");
     delay(10000);
 
   }
   Serial.print("### Reading Date-Time, Longitude, and Latitude ###\n");
-  // Generate random date, time, longitude, and latitude
-  generateRandDateTimeGPS();
-  // Lon = gps.location.lng();
+  Lon = gps.location.lng();
   Serial.print("Longitude: " + String(Lon) + ", ");
-  // Lat = gps.location.lat();
+  Lat = gps.location.lat();
   Serial.println("Latitude: " + String(Lat));
-  // dateTime = String(gps.date.day()) + "/" + String(gps.date.month()) + "/" + String(gps.date.year()) + " " + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
+  dateTime = String(gps.date.day()) + "/" + String(gps.date.month()) + "/" + String(gps.date.year()) + " " + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
   Serial.println("Date and Time of measurement: " + dateTime);
   Serial.println();
 
@@ -251,45 +219,39 @@ void loop() {
     Serial.print(", ");
   }
   Serial.println();
+  
+  esp_err_t result = esp_now_send(targetMac, dataToSend, sizeof(dataToSend));
+  Serial.println("Sending message to:" + String(targetMac[0], HEX) + ":" + String(targetMac[1], HEX) + ":" + String(targetMac[2], HEX) + ":" + String(targetMac[3], HEX) + ":" + String(targetMac[4], HEX) + ":" + String(targetMac[5], HEX));
 
-  static int failedSendCount = 0;
-  const int MAX_FAILED_SENDS = 10;
-  bool messageSent = false;
-
-  esp_err_t result = esp_now_send(peer_addr, dataToSend, sizeof(dataToSend));
   if (result == ESP_OK) {
-    Serial.println("### Message sent successfully! ###\n");
-    messageSent = true;
-    failedSendCount = 0;
-  } else {
-    Serial.println("### Message sending failed! Data will be backed up. ###\n");
-    messageSent = false;
-    failedSendCount++;
-    backupMessage(dataToSend, sizeof(dataToSend));
-  }
+      Serial.println("Message queued for sending");
+      unsigned long startTime = millis();
+      while (!espNowSendSuccess && millis() - startTime < 500) {
+        // Wait for up to 1000ms for the send confirmation
+      }
 
-  if (failedSendCount >= MAX_FAILED_SENDS) {
-    initDTULTE();
-    Serial.println("DTU LTE module initialized!");
-    delay(1000);
-    Serial.println("Connecting to MQTT server...");
-    myMQTT.connectToMQTT();
-    Serial.println("Connected to MQTT server!");
-    myMQTT.subscribe(myTopic);
-    Serial.println("Subscribed to topic: " + myTopic);
-
-    String dataToPub = sensorData.createWaterStationJSON(sensorReadings[0], sensorReadings[1], sensorReadings[2], sensorReadings[3], Lon, Lat, relayStatus);
-    if (myMQTT.publish(myTopic, dataToPub)) {
-      Serial.println("### Message sent successfully via DTU LTE module! ###\n");
-      failedSendCount = 0;
+      if (espNowSendSuccess) {
+        Serial.println("### Message sent successfully to " + String(targetMac[0], HEX) + ":" + String(targetMac[1], HEX) + ":" + String(targetMac[2], HEX) + ":" + String(targetMac[3], HEX) + ":" + String(targetMac[4], HEX) + ":" + String(targetMac[5], HEX) + " ###\n");
+        messageSent = true;
+        failedSendCount = 0;
+      } else {
+        Serial.println("### Message sending failed! Data will be backed up. ###\n");
+        messageSent = false;
+        failedSendCount++;
+        Serial.println("Failed send count: " + String(failedSendCount));
+        backupMessage(dataToSend, sizeof(dataToSend));
+      }
     } else {
-      Serial.println("### Failed to send via DTU LTE. Entering sleep mode... ###\n");
-      enterSleepMode(30 * 60 * 1000);
+      Serial.println("Message not queued for sending");
     }
+
+  if (failedSendCount >= MAX_FAILED_SENDS+10) {
+    Serial.println("### Max failed sends reached. Entering sleep mode. ###\n");
+    enterSleepMode(60);
   }
 
   if (backupIndex > 0) {
-    esp_err_t backupResult = esp_now_send(peer_addr, backupBuffer, backupIndex);
+    esp_err_t backupResult = esp_now_send(targetMac, backupBuffer, backupIndex);
     if (backupResult == ESP_OK) {
       Serial.println("Backup message sent successfully!");
       backupIndex = 0;
