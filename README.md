@@ -2,51 +2,82 @@
 
 ## Overview
 
-This project employs the M5 Atom as a node and another M5 Atom (though theoretically, any M5 ESP32-based device would suffice) as a gateway. For the station, a Core/Core 2/Core S3 can be used to display an appealing UI. This setup is a fusion that extends the functionality and features of two projects: [BKInnovation_codeC](https://github.com/HyHyZhaLee/BKInnovation_codeC) & [M5AirQuality](https://github.com/armel/M5AirQuality/).
-The project introduces two communication channels: WiFi for internet connectivity and MQTT server communication, alongside ESPNow for one-way communication between the WaterNode and WaterGateway/WaterStation. It's essential to configure the WiFi router's channel to 0 or 1 to prevent interference with ESPNow's operation.
+This project, addressing critical water pollution and scarcity challenges in Vietnam, introduces an innovative, low-cost, mobile water monitoring system. It's designed for easy adaptation to various environments, notably small watercraft. The system combines advanced hardware and software technologies to provide real-time monitoring and pollution detection. This is the source code of my MDT406 implementation.
 
-## Features
+## System Components
 
-1. **ESPNow Communication:** This project implements ESPNow, facilitating one-way communication between the Node and Gateway. The Node transmits sensor data to the Gateway.
-2. **GPS & DateTime:** Utilize the M5 AT6558 GPS module to fetch GPS information to the Node device and send to Gateway for tracking purpose
-3. **Water Sensor Network:** This project employs various water measuring sensor, like pH, ORP, Temp & EC to determine quality of the water source.
-4.  **Offline Backup Data:** Despite the fact that M5 Atom is a very resource-limited device. The program try to handle disconnection from gateway with backup buffer store on SRAM waiting to reconnect and feed data back to the Gateway.
-5.  **WiFi Connectivity:** The WaterGateway uses WiFi to connect to the internet and an MQTT server for data publishing. The code includes the necessary WiFi setup.
+### Atom_Gateway
+- **Atom_Gateway.ino**: The main program for the Gateway module, handling data reception from Nodes and forwarding it to the server.
+- **MQTT_helper.cpp/h**: Helper functions for managing MQTT connections, essential for data publishing and subscribing.
+- **sensor_data.cpp/h**: Manages the processing and handling of sensor data received from the Nodes.
 
-## Prerequisites
+### Atom_Node
+- **platformio.ini**: Configuration file for PlatformIO, setting up the environment for the Node module.
+- **src/Atom_Node.cpp/h**: Core source code for the Node module, responsible for collecting and sending sensor data.
+- **sensor_data.cpp/h**: Handles sensor data processing within the Node.
 
-- PlatformIO or Arduino IDE for programming the M5 ESP32 devices.
-- In this project I used the M5 Atom Lite for the node/gateway and the M5 Core/Core 2/Core S3 as the station but any ESP32-based MCU device theoretically would work.
+### Atom_Node_LTE
+- **Atom_DTU_CAT1.h**: Handles LTE communication, enabling data transmission in areas lacking traditional network infrastructure.
+- **Atom_Node_LTE.cpp/h**: Extension of the Atom Node, including LTE capabilities for wider area communication.
+- **MQTT_helper.cpp/h and sensor_data.cpp/h**: Similar to Atom_Node, but with adjustments for LTE communication.
 
-## Setup and Configuration
+### C_Cam
+- **C_Cam.cpp/h**: Source code for M5 StickC, used for visual monitoring, additional data collection from the Unit-V.
+- **unitv_src**: Contains firmware and models for the camera module, enabling advanced features for image recognition.
 
-1. Clone or download the project code from [GitHub - CEMP](https://github.com/tin-nguyen-31k17/CEMP).
+### Client_Dashboard
+- A comprehensive Flutter application providing a user interface for monitoring and controlling the system.
+- Contains various useful page like Live GPS Tracking, Real-Time Graph, Sensor Control for a rich user experience.
+- Supports multiple platforms (android, ios, linux, macos, web, windows), ensuring wide accessibility.
 
-2. Configure the code for both the WaterNode and WaterGateway/Water by adjusting the WiFi credentials, and other project-specific settings.
+### Core_Station
+- **Core_Station.cpp/h**: Central program for the Core Station, handling data from Nodes and providing an nice on-site user interface.
+- **MQTT_helper.cpp/h, sensor_data.cpp/h, and tools.h**: Various utilities for handling MQTT communication, sensor data, and other functionalities.
 
-3. Ensure that your router's WiFi channel is set to either 0, 1 (for some specific routers, 3 or 5) to prevent interference with ESPNow's operation.
+### Icons
+- Contains various icons (png, svg) used across the system.
 
-4. Upload the code to your end node and Gateway/Station devices using PlatformIO or the Arduino IDE.
+### Tools
+- **ics.py, i.h, testpub.py**: contains some utility scripts and headers for system configuration, testing, and debugging.
 
-## How It Works
+## Summary
 
-- The Node reads water sensor data, GPS information and sends it to the Gateway using the ESPNow protocol.
-- The Gateway connects to the internet via WiFi and publishes the received data to an MQTT server.
+Each component in this structure plays a vital role in the functionality of the CEMP Mobility Water Monitoring Station Project. From data collection (Atom_Node) to transmission (Atom_Gateway, Atom_Node_LTE), and from user interaction (Client_Dashboard) to central processing (Core_Station), these components work together seamlessly. The inclusion of a camera module (C_Cam) and extensive support across platforms for the Client Dashboard highlights the system’s versatility and user-centric design.
 
-## To-Do List
 
-The project is a work in progress, and there are some planned enhancements:
+## Objectives
 
-1. **Two-Way Communication:** Implement two-way communication between the WaterNode and WaterGateway, allowing commands and data to be exchanged in both directions.
+- **Real-time Alerts**: Immediate notifications for water pollution incidents.
+- **Data Analysis**: Basic analysis algorithms for accurate water quality assessment.
+- **User-Friendly Interface**: Easy access to the system’s interface for monitoring and decision-making.
+- **Versatile Operation**: Effective functioning in various environmental conditions.
+- **Scalability**: Ability to adapt the system to different scales as required.
 
-2. **Channel Auto-Configuration:** The rGateway will have the ability to determine its operating channel and set the Node's channel accordingly to optimize communication.
+## Challenges
 
-3. **Power Optimization:** Optimize the code for low-power operation, allowing devices to sleep when not in use or when not connected to each other.
+- **Sensor Management**: Ensuring compatibility and reliability of numerous sensors.
+- **Model Development**: Creating robust models for various water bodies and environmental conditions.
+- **Network Connectivity**: Establishing stable connections, especially in remote areas.
+- **Training Data**: Gathering diverse data for accurate pollution detection.
+- **Sensor Integration**: Enhancing real-time monitoring and detection capabilities.
+
+## Usage
+
+- **Deployment**: Ideal for small watercraft, offering ease of adaptation to different environments.
+- **Monitoring**: Continuously tracks various water quality parameters.
+- **Data Transmission**: Uses IoT for efficient communication and data sharing.
+- **User Interaction**: Through the application, users can monitor, control, and respond to data insights.
+
+## Future Enhancements
+
+- Further optimization for performance and efficiency.
+- Expansion of sensor network and data processing capabilities.
+- Enhancements to user interface and system interactivity.
 
 ## Contributing
 
-Contributions to this project are welcome. Feel free to submit pull requests or open issues on the GitHub repository to help improve the functionality and performance of the WaterNode and WaterGateway.
+Contributions are welcome. Feel free to submit pull requests or open issues on the GitHub repository for functionality and performance improvements.
 
 ## License
 
-This project is open-source and released under the [MIT License](LICENSE).
+This project is open-source and available under the [MIT License](LICENSE).
